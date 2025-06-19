@@ -32,14 +32,11 @@
     <input type="number" id="amount" placeholder="Amount" required />
     <button type="submit">Add Expense</button>
     <button type="button" id="view-history-btn" onclick="showHistory()">View Expense History</button>
-    <!-- index.html -->
-    <!-- ...existing code above -->
 
     <button type="button" onclick="exportData()">Export Backup (.json)</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
     <button type="button" onclick="document.getElementById('import-file').click()">Import Backup (.json)</button>
 
-    <!-- ...existing code below -->
 
     </form>
 
