@@ -117,3 +117,73 @@ td strong {
 tr:hover {
   background-color: #f9f9f9;
 }
+
+/* style.css */
+
+/* ... keep all your existing styles above this line ... */
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+    width: 100%;
+  }
+
+  form {
+    gap: 8px;
+  }
+
+  form input,
+  form select,
+  form button {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  table {
+    font-size: 14px;
+  }
+
+  .navbar h1 {
+    font-size: 18px;
+  }
+
+  #reset-btn {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .navbar h1 {
+    text-align: center;
+    width: 100%;
+  }
+
+  #reset-btn {
+    width: 100%;
+  }
+
+  form {
+    flex-direction: column;
+  }
+
+  form input,
+  form select,
+  form button {
+    width: 100%;
+  }
+
+  table,
+  th,
+  td {
+    font-size: 12px;
+  }
+}
