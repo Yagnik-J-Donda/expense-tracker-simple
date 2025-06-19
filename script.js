@@ -14,9 +14,12 @@ let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 
 function setCurrentDateTime() {
   const now = new Date();
-  const iso = now.toISOString().slice(0, 16); // yyyy-MM-ddTHH:mm
-  document.getElementById("date").value = iso;
+  const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                    .toISOString()
+                    .slice(0, 16);
+  document.getElementById("date").value = localISO;
 }
+
 
 setCurrentDateTime();
 
