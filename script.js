@@ -129,29 +129,58 @@ function showDateDetails(date, entries) {
 updateRemainingBudget();
 
 function resetAllData() {
+  const wantBackup = confirm("Do you want to export a backup before resetting all data?");
+  if (wantBackup) {
+    exportData(); // Trigger download first
+  }
+
   const confirmed = confirm("Are you sure you want to reset all data?");
   if (confirmed) {
     localStorage.removeItem("expenses");
     expenses = [];
+    undoStack = [];
     updateRemainingBudget();
     document.getElementById("history-view").innerHTML = "";
     alert("All data has been reset.");
   }
 }
 
+
+
+
 function exportData() {
+  const now = new Date();
+
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12; // Convert to 12-hour format
+  const formattedHour = String(hours).padStart(2, '0');
+
+  const timestamp = `${yyyy}-${mm}-${dd}_${formattedHour}-${minutes}-${seconds}_${ampm}`;
+  const filename = `expense-backup-${timestamp}.json`;
+
   const dataStr = JSON.stringify(expenses, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
   a.setAttribute("href", url);
-  a.setAttribute("download", "expense-backup.json");
-  document.body.appendChild(a); // ✅ Append to body
+  a.setAttribute("download", filename);
+  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a); // ✅ Remove after click
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+
+
 
 
 function importData(event) {
@@ -180,3 +209,41 @@ function importData(event) {
 
 updateRemainingBudget();
 showHistory(); // ✅ Add this line to show history on load
+
+
+let undoStack = [];
+
+function undoLastEntry() {
+  if (expenses.length === 0) {
+    alert("No entries to undo.");
+    return;
+  }
+
+  const lastEntry = expenses[expenses.length - 1];
+  const confirmUndo = confirm(
+    `Are you sure you want to undo this entry?\n\nDate: ${new Date(lastEntry.date).toLocaleString()}\nCategory: ${lastEntry.category}\nAmount: $${lastEntry.amount.toFixed(2)}`
+  );
+
+  if (confirmUndo) {
+    const removed = expenses.pop();
+    undoStack.push(removed);
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+    updateRemainingBudget();
+    showHistory();
+    alert("Last entry has been undone.");
+  }
+}
+
+function redoLastEntry() {
+  if (undoStack.length === 0) {
+    alert("No entry to redo.");
+    return;
+  }
+
+  const restored = undoStack.pop();
+  expenses.push(restored);
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+  updateRemainingBudget();
+  showHistory();
+  alert("Last undone entry has been restored.");
+}

@@ -187,3 +187,14 @@ tr:hover {
     font-size: 12px;
   }
 }
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.action-buttons button {
+  flex: 1;
+}
