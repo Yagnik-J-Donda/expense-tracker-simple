@@ -163,7 +163,7 @@ function importData(event) {
     try {
       const imported = JSON.parse(e.target.result);
       if (Array.isArray(imported)) {
-        expenses = imported;
+        expenses = expenses.concat(imported);
         localStorage.setItem("expenses", JSON.stringify(expenses));
         updateRemainingBudget();
         showHistory();
