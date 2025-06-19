@@ -137,16 +137,19 @@ function resetAllData() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify(expenses, null, 2)], { type: "application/json" });
+  const dataStr = JSON.stringify(expenses, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "expense-backup.json";
+  a.setAttribute("href", url);
+  a.setAttribute("download", "expense-backup.json");
+  document.body.appendChild(a); // ✅ Append to body
   a.click();
-
+  document.body.removeChild(a); // ✅ Remove after click
   URL.revokeObjectURL(url);
 }
+
 
 function importData(event) {
   const file = event.target.files[0];
