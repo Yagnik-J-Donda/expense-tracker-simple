@@ -136,3 +136,38 @@ function resetAllData() {
   }
 }
 
+function exportData() {
+  const blob = new Blob([JSON.stringify(expenses, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "expense-backup.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (Array.isArray(imported)) {
+        expenses = imported;
+        localStorage.setItem("expenses", JSON.stringify(expenses));
+        updateRemainingBudget();
+        showHistory();
+        alert("Data imported successfully.");
+      } else {
+        alert("Invalid file format.");
+      }
+    } catch (err) {
+      alert("Error reading file.");
+    }
+  };
+  reader.readAsText(file);
+}
