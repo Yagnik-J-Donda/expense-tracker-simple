@@ -174,3 +174,6 @@ function importData(event) {
   };
   reader.readAsText(file);
 }
+
+updateRemainingBudget();
+showHistory(); // ✅ Add this line to show history on load
