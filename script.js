@@ -40,6 +40,8 @@ document.getElementById("expense-form").addEventListener("submit", (e) => {
   showHistory();
   e.target.reset();
   setCurrentDateTime();
+
+  amountInput.blur();
 });
 
 
