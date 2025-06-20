@@ -7,58 +7,62 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-    
-    <div class="container">
-      <h1>Expense Tracker</h1>
+  <div class="container">
+    <h1>Expense Tracker</h1>
 
     <form id="expense-form">
-        <input type="datetime-local" id="date" required />
-        
-        <select id="category" required>
-            <option value="">--Select Category--</option>
-            <option value="Rent">Rent</option>
-            <option value="Phone">Phone + Internet</option>
-            <option value="Groceries">Groceries</option>
-            <option value="Transportation">Transportation</option>
-            <option value="Dining">Dining Out</option>
-            <option value="Clothing">Clothing / Personal</option>
-            <option value="Entertainment">Entertainment</option>
-            <option value="Emergency">Emergency</option>
-        </select>
-        
-        <input type="number" id="amount" placeholder="Amount" required />
-        
-        <button type="submit">Add Expense</button>
-        <button type="button" id="view-history-btn" onclick="showHistory()">View Expense History</button>
-        <button type="button" onclick="exportData()">Export Backup (.json)</button>
-        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
-        <button type="button" onclick="document.getElementById('import-file').click()">Import Backup (.json)</button>
-        <button id="reset-btn" onclick="resetAllData()">Reset All Data</button>
-        <div class="action-buttons">
-            <button type="button" onclick="undoLastEntry()">Undo Last Entry</button>
-            <button type="button" onclick="redoLastEntry()">Redo Last Entry</button>
-        </div>
+      <input type="datetime-local" id="date" required />
+
+      <select id="category" required>
+        <option value="">--Select Category--</option>
+        <option value="Rent">Rent</option>
+        <option value="Phone">Phone + Internet</option>
+        <option value="Groceries">Groceries</option>
+        <option value="Transportation">Transportation</option>
+        <option value="Dining">Dining Out</option>
+        <option value="Clothing">Clothing / Personal</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Emergency">Emergency</option>
+      </select>
+
+      <input type="number" id="amount" placeholder="Amount" required />
+
+      <button type="submit">Add Expense</button>
+
+      <button type="button" onclick="exportData()">Export Backup (.json)</button>
+
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
+      <button type="button" onclick="document.getElementById('import-file').click()">Import Backup (.json)</button>
+
+      <button id="reset-btn" onclick="resetAllData()">Reset All Data</button>
+
+      <div class="action-buttons">
+        <button type="button" onclick="undoLastEntry()">Undo Last Entry</button>
+        <button type="button" onclick="redoLastEntry()">Redo Last Entry</button>
+      </div>
     </form>
 
+    <hr class="section-divider" />
 
-<h2>Remaining Budget</h2>
-<table id="budget-table">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Spent ($)</th>
-      <th>Remaining ($)</th>
-      <th>% Used</th>
-    </tr>
-  </thead>
-  <tbody id="budget-body">
-    <!-- Filled dynamically by JS -->
-  </tbody>
-</table>
+    <h2>Remaining Budget</h2>
+    <table id="budget-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Spent ($)</th>
+          <th>Remaining ($)</th>
+          <th>% Used</th>
+        </tr>
+      </thead>
+      <tbody id="budget-body">
+        <!-- Filled dynamically -->
+      </tbody>
+    </table>
 
-<div id="history-view" style="margin-top: 20px;"></div>
-
+    <hr class="section-divider" />
+    <h2>History</h2>
+    <div id="history-view" class="history-container"></div>
+  </div>
 
   <script src="script.js"></script>
 </body>

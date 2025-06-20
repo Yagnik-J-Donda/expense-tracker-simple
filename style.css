@@ -1,3 +1,4 @@
+/* ==== General Styles ==== */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 30px;
@@ -6,43 +7,9 @@ body {
   justify-content: center;
 }
 
-.navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background-color: #343a40;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.navbar h1 {
-  font-size: 20px;
-  margin: 0;
-}
-
-#reset-btn {
-  background-color: #dc3545;
-  color: white;
-  font-weight: bold;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#reset-btn:hover {
-  background-color: #b52a37;
-}
-
+/* ==== Container ==== */
 .container {
-  background: white;
+  background: #fff;
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
@@ -50,11 +17,13 @@ body {
   max-width: 500px;
 }
 
+/* ==== Headings ==== */
 h1, h2 {
   text-align: center;
   color: #333;
 }
 
+/* ==== Form Styling ==== */
 form {
   display: flex;
   flex-direction: column;
@@ -62,7 +31,9 @@ form {
   margin-bottom: 20px;
 }
 
-form input, form select, form button {
+form input,
+form select,
+form button {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -74,25 +45,26 @@ form button {
   color: white;
   font-weight: bold;
   cursor: pointer;
+  border: none;
 }
 
 form button:hover {
   background-color: #0056b3;
 }
 
-#budget-list {
-  list-style: none;
-  padding: 0;
+/* ==== Action Buttons ==== */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 10px;
 }
 
-#budget-list li {
-  margin-bottom: 10px;
-  background: #f8f8f8;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 14px;
+.action-buttons button {
+  flex: 1;
 }
 
+/* ==== Budget Table ==== */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -118,19 +90,73 @@ tr:hover {
   background-color: #f9f9f9;
 }
 
-/* style.css */
+/* ==== Section Divider ==== */
+.section-divider {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(to right, #ccc, #999, #ccc);
+  margin: 30px 0 20px;
+}
 
-/* ... keep all your existing styles above this line ... */
+/* ==== History View Styling ==== */
+.history-container details {
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
 
-/* Responsive layout */
+.history-container summary {
+  font-weight: bold;
+  font-size: 1.1em;
+  cursor: pointer;
+  outline: none;
+}
+
+.history-container button.date-button {
+  margin: 5px;
+  padding: 5px 10px;
+  font-size: 0.9em;
+  border-radius: 5px;
+  border: 1px solid #aaa;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.history-container button.back-btn {
+  margin-top: 15px;
+  padding: 6px 12px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.history-container button.back-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* ==== Reset Button ==== */
+#reset-btn {
+  background-color: #dc3545;
+  color: white;
+  font-weight: bold;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#reset-btn:hover {
+  background-color: #b52a37;
+}
+
+/* ==== Responsive Design ==== */
 @media (max-width: 768px) {
   .container {
     padding: 20px;
-    width: 100%;
-  }
-
-  form {
-    gap: 8px;
   }
 
   form input,
@@ -144,10 +170,6 @@ tr:hover {
     font-size: 14px;
   }
 
-  .navbar h1 {
-    font-size: 18px;
-  }
-
   #reset-btn {
     padding: 6px 10px;
     font-size: 14px;
@@ -155,26 +177,6 @@ tr:hover {
 }
 
 @media (max-width: 480px) {
-  .navbar {
-    flex-direction: column;
-    height: auto;
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .navbar h1 {
-    text-align: center;
-    width: 100%;
-  }
-
-  #reset-btn {
-    width: 100%;
-  }
-
-  form {
-    flex-direction: column;
-  }
-
   form input,
   form select,
   form button {
@@ -188,13 +190,10 @@ tr:hover {
   }
 }
 
-.action-buttons {
+/* Container for back buttons shown under a date */
+.back-buttons-wrapper {
   display: flex;
+  justify-content: center;
   gap: 10px;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.action-buttons button {
-  flex: 1;
+  margin-top: 20px;
 }

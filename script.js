@@ -1,4 +1,4 @@
-// Set monthly limits for each category
+// ==== Category Limits ====
 const categoryLimits = {
   Rent: 550,
   Phone: 215,
@@ -10,98 +10,137 @@ const categoryLimits = {
   Emergency: 60,
 };
 
+// ==== State Variables ====
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let undoStack = [];
 
+// Keep track of the last opened month to restore it later
+let lastOpenedMonthKey = null;
+
+// ==== Initialize Current Date ====
 function setCurrentDateTime() {
   const now = new Date();
   const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-                    .toISOString()
-                    .slice(0, 16);
+    .toISOString().slice(0, 16);
   document.getElementById("date").value = localISO;
 }
-
-
 setCurrentDateTime();
 
-document.getElementById("expense-form").addEventListener("submit", function (e) {
+// ==== Form Submission ====
+document.getElementById("expense-form").addEventListener("submit", (e) => {
   e.preventDefault();
-
-  const dateInput = document.getElementById("date");
+  const date = document.getElementById("date").value;
   const category = document.getElementById("category").value;
   const amount = parseFloat(document.getElementById("amount").value);
-  const date = dateInput.value;
-
   if (!date || !category || isNaN(amount)) return;
 
   expenses.push({ date, category, amount });
   localStorage.setItem("expenses", JSON.stringify(expenses));
-
   updateRemainingBudget();
-  showHistory(); // if user already clicked view
-  document.getElementById("expense-form").reset();
-  setCurrentDateTime(); // refill with now
+  showHistory();
+  e.target.reset();
+  setCurrentDateTime();
 });
 
+
+// ==== Budget Display ====
 function updateRemainingBudget() {
   const spent = {};
-  expenses.forEach((item) => {
-    spent[item.category] = (spent[item.category] || 0) + item.amount;
-  });
+  expenses.forEach(e => spent[e.category] = (spent[e.category] || 0) + e.amount);
 
   const tableBody = document.getElementById("budget-body");
-  tableBody.innerHTML = ""; // Clear existing rows
+  tableBody.innerHTML = "";
 
-  for (const category in categoryLimits) {
-    const limit = categoryLimits[category];
+  Object.entries(categoryLimits).forEach(([category, limit]) => {
     const used = spent[category] || 0;
     const remaining = limit - used;
     const percentUsed = ((used / limit) * 100).toFixed(1);
 
     const row = document.createElement("tr");
-
     row.innerHTML = `
       <td>${category}</td>
       <td>$${used.toFixed(2)}</td>
       <td><strong>$${remaining.toFixed(2)}</strong></td>
       <td>${percentUsed}%</td>
     `;
-
     tableBody.appendChild(row);
-  }
+  });
 }
 
-function showHistory() {
+
+// ==== History View Grouped by Month and Date ====
+// Function to show history view, optionally keeping a specific month open
+function showHistory(keepOpen = false) {
   const grouped = {};
 
+  // Group expenses by month and date
   expenses.forEach((entry) => {
-    const dateOnly = entry.date.split("T")[0];
-    if (!grouped[dateOnly]) {
-      grouped[dateOnly] = [];
-    }
-    grouped[dateOnly].push(entry);
+    const dateObj = new Date(entry.date);
+    const year = dateObj.getFullYear();
+    const month = dateObj.toLocaleString("default", { month: "long" });
+    const dateOnly = dateObj.toISOString().split("T")[0];
+    const monthKey = `${month} ${year}`;
+
+    if (!grouped[monthKey]) grouped[monthKey] = {};
+    if (!grouped[monthKey][dateOnly]) grouped[monthKey][dateOnly] = [];
+
+    grouped[monthKey][dateOnly].push(entry);
   });
 
   const historyView = document.getElementById("history-view");
-  historyView.innerHTML = "<h2>Expense History</h2>";
+  historyView.innerHTML = "";
 
-  for (const date in grouped) {
-    const button = document.createElement("button");
-    button.textContent = date;
-    button.style.margin = "5px";
-    button.onclick = () => showDateDetails(date, grouped[date]);
-    historyView.appendChild(button);
+  // Create collapsible month blocks
+  for (const month in grouped) {
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = month;
+    details.appendChild(summary);
+
+    // Keep the last opened month open if required
+    if (keepOpen && month === lastOpenedMonthKey) {
+      details.open = true;
+    }
+
+    const monthDatesContainer = document.createElement("div");
+
+    for (const date in grouped[month]) {
+      const dateBtn = document.createElement("button");
+      dateBtn.textContent = date;
+      dateBtn.className = "date-button";
+      dateBtn.onclick = () => showDateDetails(date, grouped[month][date]);
+      monthDatesContainer.appendChild(dateBtn);
+    }
+
+    details.appendChild(monthDatesContainer);
+    historyView.appendChild(details);
   }
 }
 
+// ==== Entry Details for Specific Date ====
+// Function to show details of selected date entries with two back buttons
 function showDateDetails(date, entries) {
   const historyView = document.getElementById("history-view");
-  historyView.innerHTML = `<h2>Entries on ${date}</h2>`;
 
+  // Capture the month key to return to it later
+  const dateObj = new Date(entries[0].date);
+  const monthName = dateObj.toLocaleString("default", { month: "long" });
+  const year = dateObj.getFullYear();
+  lastOpenedMonthKey = `${monthName} ${year}`;
+
+  // Header for selected date
+  historyView.innerHTML = `
+    <hr class="section-divider" />
+    <h2>Entries on ${date}</h2>
+  `;
+
+  // Handle case with no entries
   if (entries.length === 0) {
     historyView.innerHTML += "<p>No entries for this date.</p>";
     return;
   }
 
+  // Build entry table
   const table = document.createElement("table");
   table.innerHTML = `
     <thead>
@@ -114,75 +153,74 @@ function showDateDetails(date, entries) {
     <tbody>
       ${entries.map(entry => `
         <tr>
-          <td>${new Date(entry.date).toLocaleTimeString()}</td>
+          <td>${new Date(entry.date).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          })}</td>
           <td>${entry.category}</td>
           <td>$${entry.amount.toFixed(2)}</td>
         </tr>
       `).join("")}
     </tbody>
   `;
-
   historyView.appendChild(table);
+
+  // Create a container for dual back buttons
+  const backButtonsWrapper = document.createElement("div");
+  backButtonsWrapper.className = "back-buttons-wrapper";
+
+  // Button to go back to currently open month
+  const backToMonthBtn = document.createElement("button");
+  backToMonthBtn.textContent = "🔙 Back to Month";
+  backToMonthBtn.className = "back-btn";
+  backToMonthBtn.onclick = () => showHistory(true);
+
+  // Button to go back to full month list
+  const backToAllBtn = document.createElement("button");
+  backToAllBtn.textContent = "📅 Back to All Months";
+  backToAllBtn.className = "back-btn";
+  backToAllBtn.onclick = () => {
+    lastOpenedMonthKey = null;
+    showHistory(false);
+  };
+
+  // Append both buttons to the wrapper
+  backButtonsWrapper.appendChild(backToMonthBtn);
+  backButtonsWrapper.appendChild(backToAllBtn);
+
+  // Append wrapper to the view
+  historyView.appendChild(backButtonsWrapper);
+
+  // Scroll the newly added history section into view
+setTimeout(() => {
+  historyView.scrollIntoView({ behavior: "smooth", block: "start" });
+}, 100);
+
 }
 
-// Load budget summary on startup
-updateRemainingBudget();
-
-function resetAllData() {
-  const wantBackup = confirm("Do you want to export a backup before resetting all data?");
-  if (wantBackup) {
-    exportData(); // Trigger download first
-  }
-
-  const confirmed = confirm("Are you sure you want to reset all data?");
-  if (confirmed) {
-    localStorage.removeItem("expenses");
-    expenses = [];
-    undoStack = [];
-    updateRemainingBudget();
-    document.getElementById("history-view").innerHTML = "";
-    alert("All data has been reset.");
-  }
-}
-
-
-
-
+// ==== Export Function ====
 function exportData() {
   const now = new Date();
-
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-
-  let hours = now.getHours();
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-
+  let hours = now.getHours(), minutes = now.getMinutes(), seconds = now.getSeconds();
   const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12; // Convert to 12-hour format
-  const formattedHour = String(hours).padStart(2, '0');
+  hours = hours % 12 || 12;
 
-  const timestamp = `${yyyy}-${mm}-${dd}_${formattedHour}-${minutes}-${seconds}_${ampm}`;
+  const timestamp = `${yyyy}-${mm}-${dd}_${String(hours).padStart(2, '0')}-${String(minutes).padStart(2, '0')}-${String(seconds).padStart(2, '0')}_${ampm}`;
   const filename = `expense-backup-${timestamp}.json`;
-
-  const dataStr = JSON.stringify(expenses, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
+  const data = new Blob([JSON.stringify(expenses, null, 2)], { type: "application/json" });
 
   const a = document.createElement("a");
-  a.setAttribute("href", url);
-  a.setAttribute("download", filename);
-  document.body.appendChild(a);
+  a.href = URL.createObjectURL(data);
+  a.download = filename;
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(a.href);
 }
 
-
-
-
-
+// ==== Import Function ====
 function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -200,33 +238,36 @@ function importData(event) {
       } else {
         alert("Invalid file format.");
       }
-    } catch (err) {
+    } catch {
       alert("Error reading file.");
     }
   };
   reader.readAsText(file);
 }
 
-updateRemainingBudget();
-showHistory(); // ✅ Add this line to show history on load
+// ==== Reset Function ====
+function resetAllData() {
+  const wantBackup = confirm("Do you want to export a backup before resetting all data?");
+  if (wantBackup) exportData();
 
-
-let undoStack = [];
-
-function undoLastEntry() {
-  if (expenses.length === 0) {
-    alert("No entries to undo.");
-    return;
+  const confirmed = confirm("Are you sure you want to reset all data?");
+  if (confirmed) {
+    localStorage.removeItem("expenses");
+    expenses = [];
+    undoStack = [];
+    updateRemainingBudget();
+    document.getElementById("history-view").innerHTML = "";
+    alert("All data has been reset.");
   }
+}
 
-  const lastEntry = expenses[expenses.length - 1];
-  const confirmUndo = confirm(
-    `Are you sure you want to undo this entry?\n\nDate: ${new Date(lastEntry.date).toLocaleString()}\nCategory: ${lastEntry.category}\nAmount: $${lastEntry.amount.toFixed(2)}`
-  );
-
+// ==== Undo/Redo Functions ====
+function undoLastEntry() {
+  if (!expenses.length) return alert("No entries to undo.");
+  const last = expenses.at(-1);
+  const confirmUndo = confirm(`Undo this entry?\nDate: ${new Date(last.date).toLocaleString()}\nCategory: ${last.category}\nAmount: $${last.amount.toFixed(2)}`);
   if (confirmUndo) {
-    const removed = expenses.pop();
-    undoStack.push(removed);
+    undoStack.push(expenses.pop());
     localStorage.setItem("expenses", JSON.stringify(expenses));
     updateRemainingBudget();
     showHistory();
@@ -235,15 +276,27 @@ function undoLastEntry() {
 }
 
 function redoLastEntry() {
-  if (undoStack.length === 0) {
-    alert("No entry to redo.");
-    return;
-  }
-
-  const restored = undoStack.pop();
-  expenses.push(restored);
+  if (!undoStack.length) return alert("No entry to redo.");
+  expenses.push(undoStack.pop());
   localStorage.setItem("expenses", JSON.stringify(expenses));
   updateRemainingBudget();
   showHistory();
   alert("Last undone entry has been restored.");
 }
+
+// ==== Initial Load ====
+updateRemainingBudget();
+showHistory();
+
+// Automatically refresh the datetime input at the start of every minute
+function syncTimeToMinute() {
+  const now = new Date();
+  const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+  setTimeout(() => {
+    setCurrentDateTime(); // Update immediately at next minute
+    setInterval(setCurrentDateTime, 60000); // Update every full minute afterward
+  }, msToNextMinute);
+}
+
+syncTimeToMinute();
