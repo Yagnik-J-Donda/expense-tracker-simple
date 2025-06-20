@@ -222,3 +222,19 @@ tr:hover {
     width: 100%;
   }
 }
+
+/* ==== Table Scroll Fix for Small Screens ==== */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper table {
+  min-width: 480px; /* Ensure full table fits */
+}
+
+@media (max-width: 480px) {
+  table, th, td {
+    font-size: 13px;
+  }
+}
