@@ -197,3 +197,28 @@ tr:hover {
   gap: 10px;
   margin-top: 20px;
 }
+
+/* ==== Mobile Responsive: Input Fields Block ==== */
+@media (max-width: 480px) {
+  #expense-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #expense-form input,
+  #expense-form select,
+  #expense-form button {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons button {
+    width: 100%;
+  }
+}
