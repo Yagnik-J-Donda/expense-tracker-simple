@@ -41,7 +41,9 @@ document.getElementById("expense-form").addEventListener("submit", (e) => {
   e.target.reset();
   setCurrentDateTime();
 
-  amountInput.blur();
+//   amountInput.blur();
+    document.activeElement.blur();
+
 });
 
 
