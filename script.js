@@ -106,7 +106,12 @@ function showHistory(keepOpen = false) {
     details.appendChild(summary);
     if (keepOpen && month === lastOpenedMonthKey) details.open = true;
 
-    // 🔽 Sort dropdown
+    if (details.open) {
+        setTimeout(() => details.scrollIntoView({ behavior: "smooth" }), 0);
+    }
+
+
+    // Sort dropdown
     const sortContainer = document.createElement("div");
     sortContainer.style.margin = "10px 0";
 
@@ -253,6 +258,9 @@ function showDateDetails(date, entries, grouped) {
 
   renderDateEntries(entries, "amount-desc", listContainer);
   historyView.appendChild(container);
+
+// Automatically scroll to this section
+  historyView.scrollIntoView({ behavior: "smooth" });
 }
 
 function renderDateEntries(entries, sortType, container) {
