@@ -11,11 +11,10 @@ const categoryLimits = {
 };
 
 // ==== State Variables ====
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
 let undoStack = [];
-
-// Keep track of the last opened month to restore it later
 let lastOpenedMonthKey = null;
+let sortDescending = true;
 
 // ==== Initialize Current Date ====
 function setCurrentDateTime() {
@@ -26,6 +25,13 @@ function setCurrentDateTime() {
 }
 setCurrentDateTime();
 
+// ==== Save and Reload ====
+function saveExpenses() {
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+  updateRemainingBudget();
+  showHistory();
+}
+
 // ==== Form Submission ====
 document.getElementById("expense-form").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -35,17 +41,11 @@ document.getElementById("expense-form").addEventListener("submit", (e) => {
   if (!date || !category || isNaN(amount)) return;
 
   expenses.push({ date, category, amount });
-  localStorage.setItem("expenses", JSON.stringify(expenses));
-  updateRemainingBudget();
-  showHistory();
+  saveExpenses();
   e.target.reset();
   setCurrentDateTime();
-
-//   amountInput.blur();
-    document.activeElement.blur();
-
+  document.activeElement.blur();
 });
-
 
 // ==== Budget Display ====
 function updateRemainingBudget() {
@@ -55,10 +55,14 @@ function updateRemainingBudget() {
   const tableBody = document.getElementById("budget-body");
   tableBody.innerHTML = "";
 
+  const totalLimit = Object.values(categoryLimits).reduce((a, b) => a + b, 0);
+
   Object.entries(categoryLimits).forEach(([category, limit]) => {
     const used = spent[category] || 0;
     const remaining = limit - used;
     const percentUsed = ((used / limit) * 100).toFixed(1);
+    const allocationPercent = ((limit / totalLimit) * 100).toFixed(1);
+    const usedOfTotal = ((used / totalLimit) * 100).toFixed(1);
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -66,85 +70,211 @@ function updateRemainingBudget() {
       <td>$${used.toFixed(2)}</td>
       <td><strong>$${remaining.toFixed(2)}</strong></td>
       <td>${percentUsed}%</td>
+      <td>${usedOfTotal}% / ${allocationPercent}%</td>
     `;
     tableBody.appendChild(row);
   });
 }
 
-
 // ==== History View Grouped by Month and Date ====
-// Function to show history view, optionally keeping a specific month open
 function showHistory(keepOpen = false) {
   const grouped = {};
-
-  // Group expenses by month and date
   expenses.forEach((entry) => {
     const dateObj = new Date(entry.date);
     const year = dateObj.getFullYear();
     const month = dateObj.toLocaleString("default", { month: "long" });
     const dateOnly = dateObj.toISOString().split("T")[0];
     const monthKey = `${month} ${year}`;
-
     if (!grouped[monthKey]) grouped[monthKey] = {};
     if (!grouped[monthKey][dateOnly]) grouped[monthKey][dateOnly] = [];
-
     grouped[monthKey][dateOnly].push(entry);
   });
 
   const historyView = document.getElementById("history-view");
   historyView.innerHTML = "";
 
-  // Create collapsible month blocks
-  for (const month in grouped) {
+  const monthKeys = Object.keys(grouped).sort((a, b) => {
+    const dateA = new Date(`${a} 01`);
+    const dateB = new Date(`${b} 01`);
+    return sortDescending ? dateB - dateA : dateA - dateB;
+  });
+
+  monthKeys.forEach((month) => {
     const details = document.createElement("details");
     const summary = document.createElement("summary");
     summary.textContent = month;
     details.appendChild(summary);
+    if (keepOpen && month === lastOpenedMonthKey) details.open = true;
 
-    // Keep the last opened month open if required
-    if (keepOpen && month === lastOpenedMonthKey) {
-      details.open = true;
-    }
+    // 🔽 Sort dropdown
+    const sortContainer = document.createElement("div");
+    sortContainer.style.margin = "10px 0";
+
+    const sortLabel = document.createElement("label");
+    sortLabel.textContent = "Sort by: ";
+    sortLabel.style.marginRight = "8px";
+
+    const sortSelect = document.createElement("select");
+    sortSelect.className = "date-sort-dropdown";
+
+    const options = [
+      { value: "dateAsc", label: "📅 Date Ascending" },
+      { value: "dateDesc", label: "📅 Date Descending" }
+    ];
+
+    options.forEach(opt => {
+      const option = document.createElement("option");
+      option.value = opt.value;
+      option.textContent = opt.label;
+      sortSelect.appendChild(option);
+    });
 
     const monthDatesContainer = document.createElement("div");
 
-    for (const date in grouped[month]) {
-      const dateBtn = document.createElement("button");
-      dateBtn.textContent = date;
-      dateBtn.className = "date-button";
-      dateBtn.onclick = () => showDateDetails(date, grouped[month][date]);
-      monthDatesContainer.appendChild(dateBtn);
-    }
+    sortSelect.onchange = () => {
+      renderMonthDates(grouped[month], monthDatesContainer, sortSelect.value, grouped);
+    };
 
+    sortContainer.appendChild(sortLabel);
+    sortContainer.appendChild(sortSelect);
+    details.appendChild(sortContainer);
     details.appendChild(monthDatesContainer);
+
+    renderMonthDates(grouped[month], monthDatesContainer, "dateDesc", grouped);
     historyView.appendChild(details);
-  }
+  });
+}
+
+function renderMonthDates(datesObj, container, sortMode, grouped) {
+  container.innerHTML = "";
+
+  const sortedDates = Object.keys(datesObj).sort((a, b) => {
+    const totalA = datesObj[a].reduce((sum, entry) => sum + entry.amount, 0);
+    const totalB = datesObj[b].reduce((sum, entry) => sum + entry.amount, 0);
+
+    switch (sortMode) {
+      case "dateAsc":
+        return new Date(a) - new Date(b);
+      case "dateDesc":
+        return new Date(b) - new Date(a);
+      default:
+        return new Date(b) - new Date(a);
+    }
+  });
+
+  sortedDates.forEach((date) => {
+    const dateBtn = document.createElement("button");
+    dateBtn.textContent = date;
+    dateBtn.className = "date-button";
+    dateBtn.onclick = () => showDateDetails(date, datesObj[date], grouped);
+    container.appendChild(dateBtn);
+  });
 }
 
 // ==== Entry Details for Specific Date ====
-// Function to show details of selected date entries with two back buttons
-function showDateDetails(date, entries) {
+function showDateDetails(date, entries, grouped) {
   const historyView = document.getElementById("history-view");
+  historyView.innerHTML = "";
 
-  // Capture the month key to return to it later
-  const dateObj = new Date(entries[0].date);
-  const monthName = dateObj.toLocaleString("default", { month: "long" });
-  const year = dateObj.getFullYear();
-  lastOpenedMonthKey = `${monthName} ${year}`;
+  const container = document.createElement("div");
 
-  // Header for selected date
-  historyView.innerHTML = `
-    <hr class="section-divider" />
-    <h2>Entries on ${date}</h2>
-  `;
+  const monthKey = new Date(date).toLocaleString("default", { month: "long", year: "numeric" });
 
-  // Handle case with no entries
-  if (entries.length === 0) {
-    historyView.innerHTML += "<p>No entries for this date.</p>";
-    return;
-  }
+  // 🔙 Back Buttons
+  const backButtonsWrapper = document.createElement("div");
+  backButtonsWrapper.className = "back-buttons-wrapper";
 
-  // Build entry table
+  const backToMonthBtn = document.createElement("button");
+  backToMonthBtn.textContent = "← Back to Month View";
+  backToMonthBtn.className = "back-btn";
+  backToMonthBtn.onclick = () => showHistory(true);
+
+  const backToDatesBtn = document.createElement("button");
+  backToDatesBtn.textContent = "← Back to Dates";
+  backToDatesBtn.className = "back-btn";
+  backToDatesBtn.onclick = () => {
+    const monthData = grouped[monthKey];
+    const containerForDates = document.createElement("div");
+    renderMonthDates(monthData, containerForDates, "dateDesc", grouped);
+    historyView.innerHTML = "";
+
+    const details = document.createElement("details");
+    details.open = true;
+    const summary = document.createElement("summary");
+    summary.textContent = monthKey;
+    details.appendChild(summary);
+    details.appendChild(containerForDates);
+    historyView.appendChild(details);
+  };
+
+  backButtonsWrapper.appendChild(backToMonthBtn);
+  backButtonsWrapper.appendChild(backToDatesBtn);
+  container.appendChild(backButtonsWrapper);
+
+  const heading = document.createElement("h3");
+  heading.textContent = `Entries for ${date}`;
+  heading.style.marginTop = "15px";
+  container.appendChild(heading);
+
+  const sortDiv = document.createElement("div");
+  sortDiv.style.margin = "10px 0";
+
+  const sortLabel = document.createElement("label");
+  sortLabel.textContent = "Sort by: ";
+  sortLabel.style.marginRight = "8px";
+
+  const sortSelect = document.createElement("select");
+  sortSelect.className = "date-sort-dropdown";
+
+  const options = [
+    { value: "amount-desc", text: "Amount Descending" },
+    { value: "amount-asc", text: "Amount Ascending" },
+    { value: "time-desc", text: "Time Descending" },
+    { value: "time-asc", text: "Time Ascending" },
+  ];
+
+  options.forEach(opt => {
+    const o = document.createElement("option");
+    o.value = opt.value;
+    o.textContent = opt.text;
+    sortSelect.appendChild(o);
+  });
+
+  sortSelect.onchange = () => {
+    renderDateEntries(entries, sortSelect.value, listContainer);
+  };
+
+  sortDiv.appendChild(sortLabel);
+  sortDiv.appendChild(sortSelect);
+  container.appendChild(sortDiv);
+
+  const listContainer = document.createElement("div");
+  container.appendChild(listContainer);
+
+  renderDateEntries(entries, "amount-desc", listContainer);
+  historyView.appendChild(container);
+}
+
+function renderDateEntries(entries, sortType, container) {
+  container.innerHTML = "";
+
+  const sorted = [...entries].sort((a, b) => {
+    const timeA = new Date(a.date).getTime();
+    const timeB = new Date(b.date).getTime();
+
+    switch (sortType) {
+      case "amount-asc":
+        return a.amount - b.amount;
+      case "amount-desc":
+        return b.amount - a.amount;
+      case "time-asc":
+        return timeA - timeB;
+      case "time-desc":
+      default:
+        return timeB - timeA;
+    }
+  });
+
   const table = document.createElement("table");
   table.innerHTML = `
     <thead>
@@ -154,54 +284,35 @@ function showDateDetails(date, entries) {
         <th>Amount ($)</th>
       </tr>
     </thead>
-    <tbody>
-      ${entries.map(entry => `
-        <tr>
-          <td>${new Date(entry.date).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          })}</td>
-          <td>${entry.category}</td>
-          <td>$${entry.amount.toFixed(2)}</td>
-        </tr>
-      `).join("")}
-    </tbody>
+    <tbody></tbody>
   `;
-  historyView.appendChild(table);
 
-  // Create a container for dual back buttons
-  const backButtonsWrapper = document.createElement("div");
-  backButtonsWrapper.className = "back-buttons-wrapper";
+  const tbody = table.querySelector("tbody");
 
-  // Button to go back to currently open month
-  const backToMonthBtn = document.createElement("button");
-  backToMonthBtn.textContent = "🔙 Back to Month";
-  backToMonthBtn.className = "back-btn";
-  backToMonthBtn.onclick = () => showHistory(true);
+  sorted.forEach(entry => {
+    const row = document.createElement("tr");
+    const timeCell = document.createElement("td");
+    timeCell.textContent = new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  // Button to go back to full month list
-  const backToAllBtn = document.createElement("button");
-  backToAllBtn.textContent = "📅 Back to All Months";
-  backToAllBtn.className = "back-btn";
-  backToAllBtn.onclick = () => {
-    lastOpenedMonthKey = null;
-    showHistory(false);
-  };
+    const catCell = document.createElement("td");
+    catCell.textContent = entry.category;
 
-  // Append both buttons to the wrapper
-  backButtonsWrapper.appendChild(backToMonthBtn);
-  backButtonsWrapper.appendChild(backToAllBtn);
+    const amountCell = document.createElement("td");
+    amountCell.textContent = `$${entry.amount}`;
 
-  // Append wrapper to the view
-  historyView.appendChild(backButtonsWrapper);
+    row.appendChild(timeCell);
+    row.appendChild(catCell);
+    row.appendChild(amountCell);
+    tbody.appendChild(row);
+  });
 
-  // Scroll the newly added history section into view
-setTimeout(() => {
-  historyView.scrollIntoView({ behavior: "smooth", block: "start" });
-}, 100);
-
+  container.appendChild(table);
 }
+
+// (Other functions remain unchanged: exportData, importData, resetAllData, undo/redo, syncTimeToMinute...)
+
+
+
 
 // ==== Export Function ====
 function exportData() {
@@ -212,7 +323,6 @@ function exportData() {
   let hours = now.getHours(), minutes = now.getMinutes(), seconds = now.getSeconds();
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12 || 12;
-
   const timestamp = `${yyyy}-${mm}-${dd}_${String(hours).padStart(2, '0')}-${String(minutes).padStart(2, '0')}-${String(seconds).padStart(2, '0')}_${ampm}`;
   const filename = `expense-backup-${timestamp}.json`;
   const data = new Blob([JSON.stringify(expenses, null, 2)], { type: "application/json" });
@@ -233,21 +343,35 @@ function importData(event) {
   reader.onload = function (e) {
     try {
       const imported = JSON.parse(e.target.result);
-      if (Array.isArray(imported)) {
-        expenses = expenses.concat(imported);
+      if (!Array.isArray(imported)) return alert("Invalid file format.");
+
+      let newEntries = 0;
+      const existing = new Set(expenses.map(e => `${e.date}|${e.category}|${e.amount}`));
+
+      for (const entry of imported) {
+        const key = `${entry.date}|${entry.category}|${entry.amount}`;
+        if (!existing.has(key)) {
+          expenses.push(entry);
+          existing.add(key);
+          newEntries++;
+        }
+      }
+
+      if (newEntries > 0) {
         localStorage.setItem("expenses", JSON.stringify(expenses));
         updateRemainingBudget();
         showHistory();
-        alert("Data imported successfully.");
+        alert(`✅ ${newEntries} new entries were imported successfully.`);
       } else {
-        alert("Invalid file format.");
+        alert("⚠️ All entries in the file already exist. No duplicates added.");
       }
     } catch {
-      alert("Error reading file.");
+      alert("❌ Error reading or parsing file.");
     }
   };
   reader.readAsText(file);
 }
+
 
 // ==== Reset Function ====
 function resetAllData() {
@@ -272,9 +396,7 @@ function undoLastEntry() {
   const confirmUndo = confirm(`Undo this entry?\nDate: ${new Date(last.date).toLocaleString()}\nCategory: ${last.category}\nAmount: $${last.amount.toFixed(2)}`);
   if (confirmUndo) {
     undoStack.push(expenses.pop());
-    localStorage.setItem("expenses", JSON.stringify(expenses));
-    updateRemainingBudget();
-    showHistory();
+    saveExpenses();
     alert("Last entry has been undone.");
   }
 }
@@ -282,25 +404,21 @@ function undoLastEntry() {
 function redoLastEntry() {
   if (!undoStack.length) return alert("No entry to redo.");
   expenses.push(undoStack.pop());
-  localStorage.setItem("expenses", JSON.stringify(expenses));
-  updateRemainingBudget();
-  showHistory();
+  saveExpenses();
   alert("Last undone entry has been restored.");
 }
 
 // ==== Initial Load ====
-updateRemainingBudget();
-showHistory();
+saveExpenses();
 
-// Automatically refresh the datetime input at the start of every minute
+// ==== Auto-Sync Time ====
 function syncTimeToMinute() {
   const now = new Date();
   const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
   setTimeout(() => {
-    setCurrentDateTime(); // Update immediately at next minute
-    setInterval(setCurrentDateTime, 60000); // Update every full minute afterward
+    setCurrentDateTime();
+    setInterval(setCurrentDateTime, 60000);
   }, msToNextMinute);
 }
-
 syncTimeToMinute();

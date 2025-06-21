@@ -238,3 +238,42 @@ tr:hover {
     font-size: 13px;
   }
 }
+
+.sort-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* .sort-buttons button {
+  padding: 6px 12px;
+  border-radius: 5px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+} */
+
+.sort-buttons button:hover {
+  background-color: #388e3c;
+}
+
+/* ==== Sort Dropdown Styling (Inside Each Month) ==== */
+.date-sort-dropdown {
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  background-color: #fff;
+  margin-bottom: 10px;
+}
+
+.date-sort-dropdown:hover {
+  border-color: #007BFF;
+}
+
+label + .date-sort-dropdown {
+  margin-left: 5px;
+}
