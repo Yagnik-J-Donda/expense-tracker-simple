@@ -83,7 +83,7 @@ function showHistory(keepOpen = false) {
     const dateObj = new Date(entry.date);
     const year = dateObj.getFullYear();
     const month = dateObj.toLocaleString("default", { month: "long" });
-    const dateOnly = dateObj.toISOString().split("T")[0];
+    const dateOnly = dateObj.toLocaleDateString('en-CA');  // Format: YYYY-MM-DD
     const monthKey = `${month} ${year}`;
     if (!grouped[monthKey]) grouped[monthKey] = {};
     if (!grouped[monthKey][dateOnly]) grouped[monthKey][dateOnly] = [];
@@ -306,7 +306,7 @@ function renderDateEntries(entries, sortType, container) {
     catCell.textContent = entry.category;
 
     const amountCell = document.createElement("td");
-    amountCell.textContent = `$${entry.amount}`;
+    amountCell.textContent = `$${entry.amount.toFixed(2)}`;
 
     row.appendChild(timeCell);
     row.appendChild(catCell);
