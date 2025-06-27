@@ -1,3 +1,8 @@
+// ==== Category Limits ====
+let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
+let categoryLimits = JSON.parse(localStorage.getItem("categoryLimits") || "{}");
+let categoryKinds = JSON.parse(localStorage.getItem("categoryKinds") || "{}");
+
 document.getElementById("month-select").addEventListener("change", updateRemainingBudget);
 document.getElementById("year-select").addEventListener("change", updateRemainingBudget);
 
@@ -7,11 +12,6 @@ function getMonthKeyFromDate(dateStr) {
   const month = d.toLocaleString("en-US", { month: "long" }); // Use fixed locale
   return `${month} ${year}`;
 }
-
-// ==== Category Limits ====
-let categoryLimits = JSON.parse(localStorage.getItem("categoryLimits")) || {};
-let categoryKinds = JSON.parse(localStorage.getItem("categoryKinds")) || {};
-
 
 function saveExpenses() {
   localStorage.setItem("expenses", JSON.stringify(expenses));
@@ -34,7 +34,6 @@ function renderCategoryDropdown() {
 
 
 // ==== State Variables ====
-let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
 checkAndHandleMonthChange();
 let undoStack = [];
 let lastOpenedMonthKey = null;
@@ -861,9 +860,13 @@ function closeFixedEditConfirmModal() {
   updateRemainingBudget();
 
   // 👋 [User Onboarding] Alert User to Add First Category
+if (!localStorage.getItem("hasVisitedBefore")) {
   if (Object.keys(categoryLimits).length === 0) {
     alert("Welcome! Please add your first spending category.");
   }
+  localStorage.setItem("hasVisitedBefore", "true");
+}
+
 
   // ➕ [Add Category] Handle Submission of New Category Form
   const categoryForm = document.getElementById("category-form");
