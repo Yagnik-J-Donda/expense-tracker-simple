@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Expense Tracker</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -13,17 +14,10 @@
     <form id="expense-form">
       <input type="datetime-local" id="date" required />
 
-      <select id="category" required>
+    <select id="category" required>
         <option value="">--Select Category--</option>
-        <option value="Rent">Rent</option>
-        <option value="Phone">Phone + Internet</option>
-        <option value="Groceries">Groceries</option>
-        <option value="Transportation">Transportation</option>
-        <option value="Dining">Dining Out</option>
-        <option value="Clothing">Clothing / Personal</option>
-        <option value="Entertainment">Entertainment</option>
-        <option value="Emergency">Emergency</option>
-      </select>
+    </select>
+
 
       <input type="number" id="amount" step="0.01" min="0" placeholder="Enter amount" required />
 
@@ -41,9 +35,47 @@
       </div>
     </form>
 
+    <!-- 🔧 Manage Categories Section -->
     <hr class="section-divider" />
+    <h2>Manage Categories</h2>
+
+    <form id="category-form" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px;">
+      <input type="text" id="new-type-name" placeholder="New Type Name" required style="flex: 2; padding: 5px;" />
+      <select id="new-type-kind" style="flex: 1; padding: 5px;">
+        <option value="Variable">Variable</option>
+        <option value="Fixed">Fixed</option>
+      </select>
+      <input type="number" id="new-type-limit" placeholder="Limit ($)" step="0.01" required style="flex: 1; padding: 5px;" />
+      <button type="submit" style="padding: 5px 10px;">➕ Add Type</button>
+    </form>
 
     <h2>Remaining Budget</h2>
+
+    <div id="month-year-toggle">
+      <div class="toggle-group">
+        <label for="month-select">Month:</label>
+        <select id="month-select">
+          <option value="0">January</option>
+          <option value="1">February</option>
+          <option value="2">March</option>
+          <option value="3">April</option>
+          <option value="4">May</option>
+          <option value="5">June</option>
+          <option value="6">July</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">October</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
+        </select>
+      </div>
+
+      <div class="toggle-group">
+        <label for="year-select">Year:</label>
+        <select id="year-select"></select>
+      </div>
+    </div>
+
     <div class="table-wrapper">
       <table id="budget-table">
         <thead>
@@ -59,11 +91,69 @@
       </table>
     </div>
 
+    <!-- 🔵 Total Summary (Separate from Table but within Budget Section) -->
+    <div id="total-summary" class="total-summary-box"></div>
+
+    <!-- <div style="text-align: center; margin-top: 15px;">
+      <button onclick="showPastBudgetSnapshots()" style="font-weight: bold;">📁 View Past Budget Summaries</button>
+    </div>
+
+    <div id="snapshot-view"></div> -->
+
     <hr class="section-divider" />
     <h2>History</h2>
-
+    <div id="history-filter-bar" style="text-align: center; margin-bottom: 10px;">
+      <label for="history-date-select" style="font-weight: bold;">Select Date:</label>
+      <select id="history-date-select"></select>
+    </div>
     <div id="history-view" class="history-container"></div>
   </div>
+
+<!-- 🔧 Modal Popup for Editing Category -->
+<!-- 🔧 Modal Popup for Editing Category -->
+<div id="edit-category-modal" style="display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, 0); background: #fff; border: 2px solid #ccc; padding: 20px; border-radius: 8px; z-index: 1000; width: 300px;">
+
+  <!-- ✅ Done Button (top-right) -->
+  <button type="button" id="done-edit-button" style="position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 2px 6px;">✅ Done</button>
+
+  <h3>Edit Category</h3>
+  <form id="edit-category-form">
+    <label>
+      New Name:
+      <input type="text" id="edit-type-name" />
+    </label>
+    <br><br>
+    <label>
+      New Limit ($):
+      <input type="number" id="edit-type-limit" step="0.01" />
+    </label>
+    <br><br>
+    <button type="submit">✅ Apply</button>
+    <button type="button" onclick="closeCategoryEditModal()">❌ Cancel</button>
+  </form>
+</div>
+
+
+<!-- ✅ Confirm Add Type Modal -->
+<div id="confirm-add-type-modal" style="display: none; position: fixed; top: 25%; left: 50%; transform: translate(-50%, -25%); background: #fff; border: 2px solid #ccc; padding: 20px; border-radius: 10px; z-index: 1000; width: 320px;">
+  <h3>Confirm New Category</h3>
+  <p id="confirm-type-details"></p>
+  <div style="text-align: right; margin-top: 10px;">
+    <button id="confirm-add-type-btn" style="margin-right: 8px;">✅ Yes, Add</button>
+    <button onclick="closeConfirmAddTypeModal()">❌ Edit Again</button>
+  </div>
+</div>
+
+<!-- 🔒 Confirm Editing Fixed Type -->
+<div id="confirm-edit-fixed-modal" style="display: none; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -30%); background: #fff; border: 2px solid #ccc; padding: 20px; border-radius: 10px; z-index: 1000; width: 320px;">
+  <p>Are you sure you want to edit this <b>fixed</b> type?</p>
+  <div style="text-align: right; margin-top: 10px;">
+    <button id="confirm-edit-fixed-btn" style="margin-right: 8px;">✅ Yes, Edit</button>
+    <button onclick="closeFixedEditConfirmModal()">❌ Cancel</button>
+  </div>
+</div>
+
+
 
   <!-- ✅ Local JS script (no Firebase, no type="module") -->
   <script src="script.js"></script>

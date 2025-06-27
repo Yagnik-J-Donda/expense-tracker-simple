@@ -1,20 +1,45 @@
+document.getElementById("month-select").addEventListener("change", updateRemainingBudget);
+document.getElementById("year-select").addEventListener("change", updateRemainingBudget);
+
+function getMonthKeyFromDate(dateStr) {
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = d.toLocaleString("en-US", { month: "long" }); // Use fixed locale
+  return `${month} ${year}`;
+}
+
 // ==== Category Limits ====
-const categoryLimits = {
-  Rent: 550,
-  Phone: 215,
-  Groceries: 180,
-  Transportation: 200,
-  Dining: 25,
-  Clothing: 60,
-  Entertainment: 26,
-  Emergency: 60,
-};
+let categoryLimits = JSON.parse(localStorage.getItem("categoryLimits")) || {};
+let categoryKinds = JSON.parse(localStorage.getItem("categoryKinds")) || {};
+
+
+function saveExpenses() {
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+  localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
+  localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
+}
+
+function renderCategoryDropdown() {
+  const select = document.getElementById("category");
+  select.innerHTML = '<option value="">--Select Category--</option>';
+
+  Object.keys(categoryLimits).forEach(category => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    select.appendChild(option);
+  });
+}
+// renderCategoryDropdown();
+
 
 // ==== State Variables ====
 let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
+checkAndHandleMonthChange();
 let undoStack = [];
 let lastOpenedMonthKey = null;
 let sortDescending = true;
+let categoryBeingEdited = null; // 🔄 Tracks which category is being edited
 
 // ==== Initialize Current Date ====
 function setCurrentDateTime() {
@@ -24,6 +49,60 @@ function setCurrentDateTime() {
   document.getElementById("date").value = localISO;
 }
 setCurrentDateTime();
+
+// Modified: Populate Year dropdown and auto-select current year
+function populateYearDropdown() {
+  const currentYear = new Date().getFullYear();
+  const yearSelect = document.getElementById("year-select");
+  yearSelect.innerHTML = ""; // Clear old options (if any)
+
+  for (let y = currentYear - 2; y <= currentYear + 3; y++) {
+    const option = document.createElement("option");
+    option.value = y;
+    option.textContent = y;
+    if (y === currentYear) option.selected = true; // ✅ Select current year by default
+    yearSelect.appendChild(option);
+  }
+}
+
+// 🔧 Added: Auto-select current month on load
+document.getElementById("month-select").value = new Date().getMonth();
+
+populateYearDropdown();
+
+// 🔧 Added: Update both budget and history views when month/year changes
+document.getElementById("month-select").addEventListener("change", () => {
+  updateRemainingBudget();
+  updateHistory();
+});
+
+document.getElementById("year-select").addEventListener("change", () => {
+  updateRemainingBudget();
+  updateHistory();
+});
+
+// 🔧 Added: Show selected date's entries when changed (IT IS A LISTENER)
+document.getElementById("history-date-select").addEventListener("change", (e) => {
+  const selectedDate = e.target.value;
+
+  // ✅ Save the selected date to localStorage
+  localStorage.setItem("selectedHistoryDate", selectedDate);
+
+  // ✅ Show that date's history
+  renderDateHistory(selectedDate);
+
+  // ⏳ Wait for history DOM to update before measuring
+  setTimeout(() => {
+    const historySection = document.getElementById("history-view");
+    const rect = historySection.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+
+    if (rect.bottom > windowHeight) {
+      historySection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, 150);
+});
+
 
 // ==== Save and Reload ====
 function saveExpenses() {
@@ -47,16 +126,96 @@ document.getElementById("expense-form").addEventListener("submit", (e) => {
   document.activeElement.blur();
 });
 
+// 🔧 Updated: Show all dates in history selector (not filtered by month/year)
+function updateHistory() {
+  const dateSelect = document.getElementById("history-date-select");
+  const historyView = document.getElementById("history-view");
+
+  dateSelect.innerHTML = "";
+  historyView.innerHTML = "";
+
+  const allDates = expenses
+    .map(e => new Date(e.date).toLocaleDateString('en-CA'));
+
+  const uniqueDates = [...new Set(allDates)].sort((a, b) => new Date(b) - new Date(a));
+
+  if (uniqueDates.length === 0) {
+    dateSelect.innerHTML = `<option value="">No entries found</option>`;
+    historyView.innerHTML = `<p style="text-align:center;">No history available.</p>`;
+    return;
+  }
+
+  uniqueDates.forEach(date => {
+    const option = document.createElement("option");
+    option.value = date;
+    option.textContent = date;
+    dateSelect.appendChild(option);
+  });
+
+  renderDateHistory(uniqueDates[0]); // Load most recent date by default
+}
+
+function renderDateHistory(dateStr) {
+  const historyView = document.getElementById("history-view");
+  historyView.innerHTML = "";
+
+  const entries = expenses.filter(e => new Date(e.date).toLocaleDateString('en-CA') === dateStr);
+  if (entries.length === 0) {
+    historyView.innerHTML = `<p style="text-align:center;">No entries for ${dateStr}</p>`;
+    return;
+  }
+
+  const title = document.createElement("h3");
+  title.textContent = `Entries for ${dateStr}`;
+  historyView.appendChild(title);
+
+  const table = document.createElement("table");
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Category</th>
+        <th>Amount ($)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+
+  const tbody = table.querySelector("tbody");
+
+  const sorted = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+  sorted.forEach(entry => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+      <td>${entry.category}</td>
+      <td>$${entry.amount.toFixed(2)}</td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  historyView.appendChild(table);
+}
+
 // ==== Budget Display ====
 function updateRemainingBudget() {
+  const selectedMonth = parseInt(document.getElementById("month-select").value);
+  const selectedYear = parseInt(document.getElementById("year-select").value);
+
   const spent = {};
-  expenses.forEach(e => spent[e.category] = (spent[e.category] || 0) + e.amount);
+  expenses.forEach(e => {
+    const d = new Date(e.date);
+    if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
+      spent[e.category] = (spent[e.category] || 0) + e.amount;
+    }
+  });
 
   const tableBody = document.getElementById("budget-body");
   tableBody.innerHTML = "";
 
   const totalLimit = Object.values(categoryLimits).reduce((a, b) => a + b, 0);
 
+  // 🧾 Fill table rows for each category
   Object.entries(categoryLimits).forEach(([category, limit]) => {
     const used = spent[category] || 0;
     const remaining = limit - used;
@@ -66,15 +225,45 @@ function updateRemainingBudget() {
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${category}</td>
-      <td>$${used.toFixed(2)}</td>
-      <td><strong>$${remaining.toFixed(2)}</strong></td>
-      <td>${percentUsed}%</td>
-      <td>${usedOfTotal}% / ${allocationPercent}%</td>
+        <td style="cursor: pointer; color: #0077cc;" onclick="openCategoryEditModal('${category}')">${category}</td>
+        <td>$${used.toFixed(2)}</td>
+        <td><strong>$${remaining.toFixed(2)}</strong></td>
+        <td>${percentUsed}%</td>
+        <td>${usedOfTotal}% / ${allocationPercent}%</td>
     `;
     tableBody.appendChild(row);
   });
+
+  // 📊 Total Summary Box: Shows total spent, remaining, and % used
+  const totalSummaryBox = document.getElementById("total-summary");
+
+  let totalUsed = 0;
+  let fullLimit = 0;
+
+  for (let category in categoryLimits) {
+    const used = spent[category] || 0;
+    totalUsed += used;
+    fullLimit += categoryLimits[category];
+  }
+
+  const totalRemaining = fullLimit - totalUsed;
+  const percentUsed = fullLimit > 0 ? ((totalUsed / fullLimit) * 100).toFixed(1) : "0.0";
+
+totalSummaryBox.innerHTML = `
+  <div class="total-summary-grid">
+    <div class="label">💸 Total Spent:</div>
+    <div class="value">$${totalUsed.toFixed(2)}</div>
+
+    <div class="label">💼 Total Remaining:</div>
+    <div class="value">$${totalRemaining.toFixed(2)}</div>
+
+    <div class="label">📊 Used:</div>
+    <div class="value">${percentUsed}%</div>
+  </div>
+`;
+
 }
+
 
 // ==== History View Grouped by Month and Date ====
 function showHistory(keepOpen = false) {
@@ -183,7 +372,7 @@ function showDateDetails(date, entries, grouped) {
 
   const container = document.createElement("div");
 
-  const monthKey = new Date(date).toLocaleString("default", { month: "long", year: "numeric" });
+const monthKey = getMonthKeyFromDate(date);
 
   // 🔙 Back Buttons
   const backButtonsWrapper = document.createElement("div");
@@ -197,20 +386,75 @@ function showDateDetails(date, entries, grouped) {
   const backToDatesBtn = document.createElement("button");
   backToDatesBtn.textContent = "← Back to Dates";
   backToDatesBtn.className = "back-btn";
-  backToDatesBtn.onclick = () => {
-    const monthData = grouped[monthKey];
-    const containerForDates = document.createElement("div");
-    renderMonthDates(monthData, containerForDates, "dateDesc", grouped);
-    historyView.innerHTML = "";
+  const monthKeyForBackBtn = getMonthKeyFromDate(date);
 
-    const details = document.createElement("details");
-    details.open = true;
-    const summary = document.createElement("summary");
-    summary.textContent = monthKey;
-    details.appendChild(summary);
-    details.appendChild(containerForDates);
-    historyView.appendChild(details);
+backToDatesBtn.onclick = () => {
+  const grouped = {};
+  expenses.forEach((entry) => {
+  const dateObj = new Date(entry.date);
+  const dateOnly = dateObj.toLocaleDateString('en-CA');
+  const monthKey = getMonthKeyFromDate(entry.date);
+  if (!grouped[monthKey]) grouped[monthKey] = {};
+  if (!grouped[monthKey][dateOnly]) grouped[monthKey][dateOnly] = [];
+  grouped[monthKey][dateOnly].push(entry);
+});
+
+
+  const monthData = grouped[monthKeyForBackBtn];
+  if (!monthData) {
+    alert("⚠️ Could not find entries for this month.");
+    return;
+  }
+
+  historyView.innerHTML = "";
+
+  const details = document.createElement("details");
+  details.open = true;
+
+  const summary = document.createElement("summary");
+  summary.textContent = monthKeyForBackBtn;
+  details.appendChild(summary);
+
+  const sortContainer = document.createElement("div");
+  sortContainer.style.margin = "10px 0";
+
+  const sortLabel = document.createElement("label");
+  sortLabel.textContent = "Sort by: ";
+  sortLabel.style.marginRight = "8px";
+
+  const sortSelect = document.createElement("select");
+  sortSelect.className = "date-sort-dropdown";
+
+  const options = [
+    { value: "dateAsc", label: "📅 Date Ascending" },
+    { value: "dateDesc", label: "📅 Date Descending" }
+  ];
+
+  options.forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt.value;
+    option.textContent = opt.label;
+    sortSelect.appendChild(option);
+  });
+
+  const monthDatesContainer = document.createElement("div");
+
+  sortSelect.onchange = () => {
+    renderMonthDates(monthData, monthDatesContainer, sortSelect.value, grouped);
   };
+
+  sortContainer.appendChild(sortLabel);
+  sortContainer.appendChild(sortSelect);
+  details.appendChild(sortContainer);
+  details.appendChild(monthDatesContainer);
+
+  renderMonthDates(monthData, monthDatesContainer, "dateDesc", grouped);
+  historyView.appendChild(details);
+
+  // Optional: scroll into view
+  historyView.scrollIntoView({ behavior: "smooth" });
+};
+
 
   backButtonsWrapper.appendChild(backToMonthBtn);
   backButtonsWrapper.appendChild(backToDatesBtn);
@@ -317,11 +561,6 @@ function renderDateEntries(entries, sortType, container) {
   container.appendChild(table);
 }
 
-// (Other functions remain unchanged: exportData, importData, resetAllData, undo/redo, syncTimeToMinute...)
-
-
-
-
 // ==== Export Function ====
 function exportData() {
   const now = new Date();
@@ -416,17 +655,303 @@ function redoLastEntry() {
   alert("Last undone entry has been restored.");
 }
 
-// ==== Initial Load ====
-saveExpenses();
+updateHistory(); // add this line after it
+
+// 🧩 1. Opens the edit modal for a variable category
+function openCategoryEditModal(category) {
+  const kind = categoryKinds[category];
+
+  // ✅ Ask for confirmation instead of blocking
+  if (kind === "Fixed") {
+    const confirmEdit = confirm(`"${category}" is a Fixed category.\nAre you sure you want to edit it?`);
+    if (!confirmEdit) return;
+  }
+
+  categoryBeingEdited = category;
+  document.getElementById("edit-type-name").value = category;
+  document.getElementById("edit-type-limit").value = categoryLimits[category];
+  document.getElementById("edit-category-modal").style.display = "block";
+}
+
+
+// 🧩 2. Applies the changes made to the category (name and/or limit)
+function applyCategoryEdit() {
+  const newName = document.getElementById("edit-type-name").value.trim();
+  const newLimit = parseFloat(document.getElementById("edit-type-limit").value);
+
+  if (!newName || isNaN(newLimit) || newLimit < 0) {
+    alert("Please enter a valid name and limit.");
+    return;
+  }
+
+  if (newName !== categoryBeingEdited) {
+    if (categoryLimits[newName]) {
+      alert("This category name already exists.");
+      return;
+    }
+
+    // 1. Assign new name and limit
+    categoryLimits[newName] = newLimit;
+    categoryKinds[newName] = categoryKinds[categoryBeingEdited];
+
+    // 2. Update all expenses that had the old category name
+    expenses.forEach(e => {
+      if (e.category === categoryBeingEdited) {
+        e.category = newName;
+      }
+    });
+
+    // 3. Delete old category
+    delete categoryLimits[categoryBeingEdited];
+    delete categoryKinds[categoryBeingEdited];
+  } else {
+    categoryLimits[newName] = newLimit;
+  }
+
+  // ✅ Save all changes to localStorage
+  localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
+  localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+
+  updateRemainingBudget();
+  renderCategoryDropdown();
+  closeCategoryEditModal();
+}
+
+
+
+
+// 🧩 3. Closes the category edit modal
+function closeCategoryEditModal() {
+  document.getElementById("edit-category-modal").style.display = "none";
+  categoryBeingEdited = null;
+}
+
 
 // ==== Auto-Sync Time ====
 function syncTimeToMinute() {
-  const now = new Date();
-  const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-
-  setTimeout(() => {
-    setCurrentDateTime();
-    setInterval(setCurrentDateTime, 60000);
-  }, msToNextMinute);
+    const now = new Date();
+    const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    
+    setTimeout(() => {
+        setCurrentDateTime();
+        setInterval(setCurrentDateTime, 60000);
+    }, msToNextMinute);
 }
 syncTimeToMinute();
+
+function checkAndHandleMonthChange() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const currentKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    
+    const lastMonthKey = localStorage.getItem("lastSavedMonth");
+    
+    if (lastMonthKey && lastMonthKey !== currentKey) {
+        // Save final budget snapshot
+        const finalSnapshot = document.getElementById("budget-body").innerHTML;
+        localStorage.setItem(`finalBudget_${lastMonthKey}`, finalSnapshot);
+        
+        // Ask user to download summary
+        if (confirm(`Download budget summary for ${lastMonthKey}?`)) {
+            const wrapper = document.createElement("table");
+            wrapper.innerHTML = `
+            <thead><tr><th>Type</th><th>Spent ($)</th><th>Remaining ($)</th><th>% Used</th><th>Usage vs Allocated</th></tr></thead>
+            <tbody>${finalSnapshot}</tbody>
+            `;
+            const blob = new Blob([wrapper.outerHTML], { type: "text/html" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `budget-summary-${lastMonthKey}.html`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+        
+        // Clear all spent category values
+        expenses = [];
+        undoStack = [];
+        saveExpenses();
+    }
+    
+    // Update the last saved month key
+    localStorage.setItem("lastSavedMonth", currentKey);
+}
+
+// function showPastBudgetSnapshots() {
+//     const view = document.getElementById("snapshot-view");
+//     view.innerHTML = "<h3>Saved Budget Summaries</h3>";
+    
+//     Object.keys(localStorage).forEach(key => {
+//         if (key.startsWith("finalBudget_")) {
+//             const date = key.replace("finalBudget_", "");
+//             const button = document.createElement("button");
+//             button.textContent = `📅 ${date}`;
+//             button.onclick = () => {
+//                 const html = localStorage.getItem(key);
+//                 const wrapper = document.createElement("div");
+//                 wrapper.innerHTML = `<h4>${date}</h4><table><thead><tr><th>Type</th><th>Spent ($)</th><th>Remaining ($)</th><th>% Used</th><th>Usage vs Allocated</th></tr></thead><tbody>${html}</tbody></table>`;
+//                 view.appendChild(wrapper);
+//                 wrapper.scrollIntoView({ behavior: "smooth" });
+//             };
+//             view.appendChild(button);
+//         }
+//     });
+    
+//     if (view.innerHTML === "<h3>Saved Budget Summaries</h3>") {
+//         view.innerHTML += "<p>No saved snapshots found.</p>";
+//     }
+// }
+
+// 🔘 [Modal] Handle Done Button to Close Edit Category Modal
+// Close on "✅ Done" at top-right
+document.addEventListener("DOMContentLoaded", function () {
+  // 🧠 [Categories] Load category data from localStorage (MUST be before rendering anything)
+  const savedLimits = localStorage.getItem("categoryLimits");
+  const savedKinds = localStorage.getItem("categoryKinds");
+
+  if (savedLimits) Object.assign(categoryLimits, JSON.parse(savedLimits));
+  if (savedKinds) Object.assign(categoryKinds, JSON.parse(savedKinds));
+
+  // 🔘 [Modal] Handle Done Button to Close Category Edit Modal
+  const doneButton = document.getElementById("done-edit-button");
+  if (doneButton) {
+    doneButton.addEventListener("click", function () {
+      closeCategoryEditModal(); // Close the modal
+    });
+  }
+
+  // Modal Confirmation logic
+  function confirmEditFixedCategory(callback) {
+  const modal = document.getElementById("confirm-edit-fixed-modal");
+  const confirmBtn = document.getElementById("confirm-edit-fixed-btn");
+
+  modal.style.display = "block";
+
+  const handleConfirm = () => {
+    modal.style.display = "none";
+    confirmBtn.removeEventListener("click", handleConfirm);
+    callback(); // Continue with editing
+  };
+
+  confirmBtn.addEventListener("click", handleConfirm);
+}
+
+function closeFixedEditConfirmModal() {
+  document.getElementById("confirm-edit-fixed-modal").style.display = "none";
+}
+
+
+  // 🕓 [History] Load Previously Selected Date on Page Refresh
+  const savedHistoryDate = localStorage.getItem("selectedHistoryDate");
+  const historyDropdown = document.getElementById("history-date-select");
+
+  if (savedHistoryDate && [...historyDropdown.options].some(opt => opt.value === savedHistoryDate)) {
+    historyDropdown.value = savedHistoryDate;
+    renderDateHistory(savedHistoryDate);
+  } else {
+    const latest = historyDropdown.value || new Date().toISOString().split("T")[0];
+    renderDateHistory(latest);
+  }
+
+  // 📥 [Categories] Load Saved Categories and Render in Dropdown
+  renderCategoryDropdown();
+
+  // 📊 [Budget] Load & Render Remaining Budget for Selected Month
+  updateRemainingBudget();
+
+  // 👋 [User Onboarding] Alert User to Add First Category
+  if (Object.keys(categoryLimits).length === 0) {
+    alert("Welcome! Please add your first spending category.");
+  }
+
+  // ➕ [Add Category] Handle Submission of New Category Form
+  const categoryForm = document.getElementById("category-form");
+  categoryForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById("new-type-name").value.trim();
+    const kind = document.getElementById("new-type-kind").value;
+    const limit = parseFloat(document.getElementById("new-type-limit").value);
+
+    if (!name || isNaN(limit) || limit < 0) {
+      alert("Please enter a valid name and limit.");
+      return;
+    }
+
+    if (categoryLimits[name]) {
+      alert("This category already exists.");
+      return;
+    }
+
+    // Save temporarily and show confirmation
+    window.tempNewType = { name, kind, limit };
+
+    const confirmBox = document.getElementById("confirm-add-type-modal");
+    const details = document.getElementById("confirm-type-details");
+    details.innerHTML = `<b>Name:</b> ${name}<br><b>Kind:</b> ${kind}<br><b>Limit:</b> $${limit.toFixed(2)}`;
+    confirmBox.style.display = "block";
+  });
+});
+
+
+// Helper Functions to Confirm/Add/Close
+document.getElementById("confirm-add-type-btn").addEventListener("click", function () {
+  if (!window.tempNewType) return;
+
+  const { name, kind, limit } = window.tempNewType;
+
+  // ✅ Add to categories
+  categoryLimits[name] = limit;
+  categoryKinds[name] = kind;
+
+  // ✅ Save everything (including categories)
+  saveExpenses();
+
+  // ✅ Refresh UI
+  renderCategoryDropdown();
+  updateRemainingBudget();
+
+  // ✅ Clear form inputs
+  document.getElementById("new-type-name").value = "";
+  document.getElementById("new-type-limit").value = "";
+
+  // ✅ Close modal
+  closeConfirmAddTypeModal();
+
+  // ✅ Clear temp state
+  window.tempNewType = null;
+
+  // ✅ Feedback (optional)
+  alert(`✅ "${name}" (${kind}) added with $${limit.toFixed(2)} limit.`);
+});
+
+function closeConfirmAddTypeModal() {
+  const modal = document.getElementById("confirm-add-type-modal");
+  if (modal) modal.style.display = "none";
+}
+
+
+// Submit form with Enter key or "Apply" button
+document.getElementById("edit-category-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  applyCategoryEdit(); // apply but don’t force close
+});
+
+// 🚀 Press Enter to Apply + Close Modal
+document.addEventListener("keydown", function (event) {
+  const modal = document.getElementById("edit-category-modal");
+  if (modal.style.display === "block" && event.key === "Enter") {
+    event.preventDefault(); // Prevent form submission
+    applyCategoryEdit();
+  }
+});
+
+
+// ==== Initial Load ====
+// 🔧 Initial setup: save current data and show current month/year view
+saveExpenses();   // Already present
+populateYearDropdown(); // Make sure it's called here
+document.getElementById("month-select").value = new Date().getMonth(); // ✅ Set current month
+updateRemainingBudget();
+updateHistory();
