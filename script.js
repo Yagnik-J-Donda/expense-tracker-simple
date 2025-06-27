@@ -860,12 +860,12 @@ function closeFixedEditConfirmModal() {
   updateRemainingBudget();
 
   // 👋 [User Onboarding] Alert User to Add First Category
-if (!localStorage.getItem("hasVisitedBefore")) {
-  if (Object.keys(categoryLimits).length === 0) {
-    alert("Welcome! Please add your first spending category.");
-  }
-  localStorage.setItem("hasVisitedBefore", "true");
-}
+// if (!localStorage.getItem("hasVisitedBefore")) {
+//   if (Object.keys(categoryLimits).length === 0) {
+//     alert("Welcome! Please add your first spending category.");
+//   }
+//   localStorage.setItem("hasVisitedBefore", "true");
+// }
 
 
   // ➕ [Add Category] Handle Submission of New Category Form
