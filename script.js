@@ -867,6 +867,18 @@ function closeFixedEditConfirmModal() {
 //   localStorage.setItem("hasVisitedBefore", "true");
 // }
 
+document.addEventListener("DOMContentLoaded", function () {
+  const onboardingShown = localStorage.getItem("onboardingShown");
+
+  if (!onboardingShown) {
+    document.getElementById("onboarding-modal").style.display = "flex";
+    document.getElementById("onboarding-ok-btn").addEventListener("click", () => {
+      document.getElementById("onboarding-modal").style.display = "none";
+      localStorage.setItem("onboardingShown", "true");
+    });
+  }
+});
+
 
   // ➕ [Add Category] Handle Submission of New Category Form
   const categoryForm = document.getElementById("category-form");
