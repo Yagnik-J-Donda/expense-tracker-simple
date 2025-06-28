@@ -102,41 +102,6 @@ document.getElementById("history-date-select").addEventListener("change", (e) =>
   }, 150);
 });
 
-document.addEventListener("DOMContentLoaded", function () {
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("nav-overlay");
-  const menuToggle = document.getElementById("menu-toggle");
-
-  function openSidebar() {
-    sidebar.style.left = "0";
-    overlay.style.display = "block";
-  }
-
-  function closeSidebar() {
-    sidebar.style.left = "-250px";
-    overlay.style.display = "none";
-  }
-
-  // ☰ Toggle Sidebar on button click
-  menuToggle.addEventListener("click", function (event) {
-    event.stopPropagation(); // Prevent outside click trigger
-    const isOpen = sidebar.style.left === "0px";
-    if (isOpen) {
-      closeSidebar();
-    } else {
-      openSidebar();
-    }
-  });
-
-  // Close sidebar when clicking outside (overlay)
-  overlay.addEventListener("click", function () {
-    closeSidebar();
-  });
-});
-
-
-
-
 // ==== Save and Reload ====
 function saveExpenses() {
   localStorage.setItem("expenses", JSON.stringify(expenses));
@@ -854,34 +819,52 @@ function checkAndHandleMonthChange() {
 // 🔘 [Modal] Handle Done Button to Close Edit Category Modal
 // Close on "✅ Done" at top-right
 document.addEventListener("DOMContentLoaded", function () {
-  // 🧠 [Categories] Load from localStorage
+  // === Sidebar Setup ===
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("nav-overlay");
+  const menuToggle = document.getElementById("menu-toggle");
+
+  function openSidebar() {
+    sidebar.style.left = "0";
+    overlay.style.display = "block";
+  }
+
+  function closeSidebar() {
+    sidebar.style.left = "-100%";
+    overlay.style.display = "none";
+  }
+
+  menuToggle.addEventListener("click", function (event) {
+    event.stopPropagation();
+    const isOpen = sidebar.style.left === "0px";
+    isOpen ? closeSidebar() : openSidebar();
+  });
+
+  overlay.addEventListener("click", closeSidebar);
+
+  // === Load Saved Categories ===
   const savedLimits = localStorage.getItem("categoryLimits");
   const savedKinds = localStorage.getItem("categoryKinds");
-
   if (savedLimits) Object.assign(categoryLimits, JSON.parse(savedLimits));
   if (savedKinds) Object.assign(categoryKinds, JSON.parse(savedKinds));
 
-  // 🔘 [Modal] Close Category Edit Modal
+  // === Handle Done Button for Category Modal ===
   const doneButton = document.getElementById("done-edit-button");
   if (doneButton) {
-    doneButton.addEventListener("click", function () {
-      closeCategoryEditModal();
-    });
+    doneButton.addEventListener("click", closeCategoryEditModal);
   }
 
-  // ✅ [Modal] Confirm Editing Fixed Category
+  // === Confirm Edit Modal Logic ===
   function confirmEditFixedCategory(callback) {
     const modal = document.getElementById("confirm-edit-fixed-modal");
     const confirmBtn = document.getElementById("confirm-edit-fixed-btn");
 
     modal.style.display = "block";
-
     const handleConfirm = () => {
       modal.style.display = "none";
       confirmBtn.removeEventListener("click", handleConfirm);
-      callback(); // Proceed
+      callback();
     };
-
     confirmBtn.addEventListener("click", handleConfirm);
   }
 
@@ -889,7 +872,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("confirm-edit-fixed-modal").style.display = "none";
   }
 
-  // 🕓 [History] Restore Previously Selected History Date
+  // === Restore Selected History Date ===
   const savedHistoryDate = localStorage.getItem("selectedHistoryDate");
   const historyDropdown = document.getElementById("history-date-select");
 
@@ -901,11 +884,11 @@ document.addEventListener("DOMContentLoaded", function () {
     renderDateHistory(latest);
   }
 
-  // 📥 [Categories] Render Dropdown + Budget Table
+  // === Render Initial Data ===
   renderCategoryDropdown();
   updateRemainingBudget();
 
-  // 👋 [First Visit Onboarding]
+  // === Onboarding Check ===
   const hasSeenOnboarding = localStorage.getItem("onboardingShown");
   if (!hasSeenOnboarding) {
     showOnboardingModal();
@@ -919,6 +902,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
 
 
 // ✅ Show the onboarding modal
