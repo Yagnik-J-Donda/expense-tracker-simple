@@ -102,10 +102,46 @@ document.getElementById("history-date-select").addEventListener("change", (e) =>
   }, 150);
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("nav-overlay");
+  const menuToggle = document.getElementById("menu-toggle");
+
+  function openSidebar() {
+    sidebar.style.left = "0";
+    overlay.style.display = "block";
+  }
+
+  function closeSidebar() {
+    sidebar.style.left = "-250px";
+    overlay.style.display = "none";
+  }
+
+  // ☰ Toggle Sidebar on button click
+  menuToggle.addEventListener("click", function (event) {
+    event.stopPropagation(); // Prevent outside click trigger
+    const isOpen = sidebar.style.left === "0px";
+    if (isOpen) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  // Close sidebar when clicking outside (overlay)
+  overlay.addEventListener("click", function () {
+    closeSidebar();
+  });
+});
+
+
+
 
 // ==== Save and Reload ====
 function saveExpenses() {
   localStorage.setItem("expenses", JSON.stringify(expenses));
+  localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
+  localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
   updateRemainingBudget();
   showHistory();
 }
@@ -600,13 +636,26 @@ function importData(event) {
           expenses.push(entry);
           existing.add(key);
           newEntries++;
+
+          // ✅ Register missing categories
+          if (!categoryLimits[entry.category]) {
+            categoryLimits[entry.category] = 0; // Default limit
+            categoryKinds[entry.category] = "Flexible"; // Default type
+          }
         }
       }
 
       if (newEntries > 0) {
+        // ✅ Save everything
         localStorage.setItem("expenses", JSON.stringify(expenses));
+        localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
+        localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
+
+        // ✅ Refresh the app UI
+        renderCategoryDropdown();
         updateRemainingBudget();
         showHistory();
+
         alert(`✅ ${newEntries} new entries were imported successfully.`);
       } else {
         alert("⚠️ All entries in the file already exist. No duplicates added.");
@@ -805,43 +854,42 @@ function checkAndHandleMonthChange() {
 // 🔘 [Modal] Handle Done Button to Close Edit Category Modal
 // Close on "✅ Done" at top-right
 document.addEventListener("DOMContentLoaded", function () {
-  // 🧠 [Categories] Load category data from localStorage (MUST be before rendering anything)
+  // 🧠 [Categories] Load from localStorage
   const savedLimits = localStorage.getItem("categoryLimits");
   const savedKinds = localStorage.getItem("categoryKinds");
 
   if (savedLimits) Object.assign(categoryLimits, JSON.parse(savedLimits));
   if (savedKinds) Object.assign(categoryKinds, JSON.parse(savedKinds));
 
-  // 🔘 [Modal] Handle Done Button to Close Category Edit Modal
+  // 🔘 [Modal] Close Category Edit Modal
   const doneButton = document.getElementById("done-edit-button");
   if (doneButton) {
     doneButton.addEventListener("click", function () {
-      closeCategoryEditModal(); // Close the modal
+      closeCategoryEditModal();
     });
   }
 
-  // Modal Confirmation logic
+  // ✅ [Modal] Confirm Editing Fixed Category
   function confirmEditFixedCategory(callback) {
-  const modal = document.getElementById("confirm-edit-fixed-modal");
-  const confirmBtn = document.getElementById("confirm-edit-fixed-btn");
+    const modal = document.getElementById("confirm-edit-fixed-modal");
+    const confirmBtn = document.getElementById("confirm-edit-fixed-btn");
 
-  modal.style.display = "block";
+    modal.style.display = "block";
 
-  const handleConfirm = () => {
-    modal.style.display = "none";
-    confirmBtn.removeEventListener("click", handleConfirm);
-    callback(); // Continue with editing
-  };
+    const handleConfirm = () => {
+      modal.style.display = "none";
+      confirmBtn.removeEventListener("click", handleConfirm);
+      callback(); // Proceed
+    };
 
-  confirmBtn.addEventListener("click", handleConfirm);
-}
+    confirmBtn.addEventListener("click", handleConfirm);
+  }
 
-function closeFixedEditConfirmModal() {
-  document.getElementById("confirm-edit-fixed-modal").style.display = "none";
-}
+  function closeFixedEditConfirmModal() {
+    document.getElementById("confirm-edit-fixed-modal").style.display = "none";
+  }
 
-
-  // 🕓 [History] Load Previously Selected Date on Page Refresh
+  // 🕓 [History] Restore Previously Selected History Date
   const savedHistoryDate = localStorage.getItem("selectedHistoryDate");
   const historyDropdown = document.getElementById("history-date-select");
 
@@ -853,34 +901,49 @@ function closeFixedEditConfirmModal() {
     renderDateHistory(latest);
   }
 
-  // 📥 [Categories] Load Saved Categories and Render in Dropdown
+  // 📥 [Categories] Render Dropdown + Budget Table
   renderCategoryDropdown();
-
-  // 📊 [Budget] Load & Render Remaining Budget for Selected Month
   updateRemainingBudget();
 
-  // 👋 [User Onboarding] Alert User to Add First Category
-// if (!localStorage.getItem("hasVisitedBefore")) {
-//   if (Object.keys(categoryLimits).length === 0) {
-//     alert("Welcome! Please add your first spending category.");
-//   }
-//   localStorage.setItem("hasVisitedBefore", "true");
-// }
+  // 👋 [First Visit Onboarding]
+  const hasSeenOnboarding = localStorage.getItem("onboardingShown");
+  if (!hasSeenOnboarding) {
+    showOnboardingModal();
+  }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const onboardingShown = localStorage.getItem("onboardingShown");
-
-  if (!onboardingShown) {
-    document.getElementById("onboarding-modal").style.display = "flex";
-    document.getElementById("onboarding-ok-btn").addEventListener("click", () => {
-      document.getElementById("onboarding-modal").style.display = "none";
+  const okBtn = document.getElementById("onboarding-ok-btn");
+  if (okBtn) {
+    okBtn.addEventListener("click", () => {
       localStorage.setItem("onboardingShown", "true");
+      closeOnboardingModal();
     });
   }
 });
 
 
-  // ➕ [Add Category] Handle Submission of New Category Form
+// ✅ Show the onboarding modal
+function showOnboardingModal() {
+  const modal = document.getElementById("onboarding-modal");
+  if (modal) modal.style.display = "flex";
+}
+
+// ✅ Close the onboarding modal
+function closeOnboardingModal() {
+  const modal = document.getElementById("onboarding-modal");
+  if (modal) modal.style.display = "none";
+}
+
+// ✅ Expose for Settings > "❓ Onboarding Again"
+window.showOnboardingModalAgain = function () {
+  localStorage.setItem("onboardingShown", "false");
+  showOnboardingModal();
+};
+
+
+
+
+
+  // ➕ [Add Category] Show Confirmation Popup
   const categoryForm = document.getElementById("category-form");
   categoryForm.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -899,7 +962,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Save temporarily and show confirmation
     window.tempNewType = { name, kind, limit };
 
     const confirmBox = document.getElementById("confirm-add-type-modal");
@@ -907,7 +969,14 @@ document.addEventListener("DOMContentLoaded", function () {
     details.innerHTML = `<b>Name:</b> ${name}<br><b>Kind:</b> ${kind}<br><b>Limit:</b> $${limit.toFixed(2)}`;
     confirmBox.style.display = "block";
   });
-});
+
+  // 📅 [Footer Year Auto Update]
+  const yearSpan = document.getElementById("current-year");
+  if (yearSpan) {
+    yearSpan.textContent = new Date().getFullYear();
+  }
+// });
+
 
 
 // Helper Functions to Confirm/Add/Close

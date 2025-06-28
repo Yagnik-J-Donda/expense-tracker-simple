@@ -8,9 +8,35 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>Expense Tracker</h1>
 
+
+
+
+<div class="wrapper">
+        <!-- 🔧 Top Navigation / Settings Bar -->
+<!-- ☰ Hamburger Navigation -->
+<!-- 🔲 Sidebar Navigation -->
+<div id="nav-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999;"></div>
+
+<div id="sidebar" style="position: fixed; top: 0; left: -250px; height: 100%; width: 250px; background-color: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.2); transition: left 0.3s ease; z-index: 1000; padding: 20px;">
+
+  <h3>⚙️ Settings</h3>
+  <button class="onboard" onclick="showOnboardingModalAgain()" style="display: block; margin: 10px 0; background: none; border: none;">❓ Onboarding Again</button>
+  <button class="import" onclick="document.getElementById('import-file').click()" style="display: block; margin: 10px 0; background: none; border: none;">📥 Import Backup</button>
+  <button class="export" onclick="exportData()" style="display: block; margin: 10px 0; background: none; border: none;">📤 Export Backup</button>
+  <button class="reset" onclick="resetAllData()" style="display: block; margin: 10px 0; background: none; border: none;">♻️ Reset All Data</button>
+</div>
+
+<!-- ☰ Hamburger Button -->
+<button id="menu-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1100; background: none; border: none; font-size: 24px; cursor: pointer;">☰</button>
+
+
+<!-- Hidden input for Import -->
+<input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
+  <div class="container">
+    <h1>YEM</h1>
+    <h2>(Your Expense Manager) </h2>
+    
     <form id="expense-form">
       <input type="datetime-local" id="date" required />
 
@@ -154,8 +180,29 @@
 </div>
 
 
+<!-- 👋 Onboarding Modal -->
+<div id="onboarding-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+  <div style="background: #fff; padding: 30px; border-radius: 12px; text-align: center; width: 90%; max-width: 400px;">
+    <h2 style="margin-top: 0;">👋 Welcome to </br><span style="color: #4CAF50;">YEM</span> </br> Your Expense Manager!</h2>
+    <p style="font-size: 16px; line-height: 1.5;">
+      <!-- Don’t worry about tracking your spending — we’ve made it simple.<br />
+      Just </br> your categories, record your expenses, and we’ll do the rest.<br /> -->
+      <strong>Stay relaxed, stay in control.</strong> 💼💸
+    </p>
+    <button id="onboarding-ok-btn" style="margin-top: 15px; padding: 10px 20px; font-weight: bold; border: none; background: #4CAF50; color: white; border-radius: 6px;">✅ Let’s Get Started</button>
+  </div>
+</div>
 
-  <!-- ✅ Local JS script (no Firebase, no type="module") -->
-  <script src="script.js"></script>
+</div>
+  <footer class="footer">
+    © 2025 <strong>YEM – Your Expense Manager</strong>. All rights reserved.
+    <br />
+    Crafted with ❤️ to simplify your personal finances.
+  </footer>
+</div>
+
+<!-- ✅ Local JS script (no Firebase, no type="module") -->
+<script src="script.js"></script>
+
 </body>
 </html>
