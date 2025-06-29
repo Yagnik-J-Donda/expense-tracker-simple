@@ -572,14 +572,21 @@ function exportData() {
   hours = hours % 12 || 12;
   const timestamp = `${yyyy}-${mm}-${dd}_${String(hours).padStart(2, '0')}-${String(minutes).padStart(2, '0')}-${String(seconds).padStart(2, '0')}_${ampm}`;
   const filename = `expense-backup-${timestamp}.json`;
-  const data = new Blob([JSON.stringify(expenses, null, 2)], { type: "application/json" });
 
+  const fullData = {
+    expenses,
+    categoryLimits,
+    categoryKinds
+  };
+
+  const data = new Blob([JSON.stringify(fullData, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(data);
   a.download = filename;
   a.click();
   URL.revokeObjectURL(a.href);
 }
+
 
 // ==== Import Function ====
 function importData(event) {
@@ -590,33 +597,42 @@ function importData(event) {
   reader.onload = function (e) {
     try {
       const imported = JSON.parse(e.target.result);
-      if (!Array.isArray(imported)) return alert("Invalid file format.");
+
+      if (!imported.expenses || !Array.isArray(imported.expenses)) {
+        return alert("❌ Invalid file format: missing 'expenses'.");
+      }
 
       let newEntries = 0;
       const existing = new Set(expenses.map(e => `${e.date}|${e.category}|${e.amount}`));
 
-      for (const entry of imported) {
+      for (const entry of imported.expenses) {
         const key = `${entry.date}|${entry.category}|${entry.amount}`;
         if (!existing.has(key)) {
           expenses.push(entry);
           existing.add(key);
           newEntries++;
-
-          // ✅ Register missing categories
-          if (!categoryLimits[entry.category]) {
-            categoryLimits[entry.category] = 0; // Default limit
-            categoryKinds[entry.category] = "Flexible"; // Default type
-          }
         }
       }
 
+      // ✅ Merge Category Limits if provided
+      if (imported.categoryLimits) {
+        Object.entries(imported.categoryLimits).forEach(([cat, limit]) => {
+          categoryLimits[cat] = limit;
+        });
+      }
+
+      // ✅ Merge Category Kinds if provided
+      if (imported.categoryKinds) {
+        Object.entries(imported.categoryKinds).forEach(([cat, kind]) => {
+          categoryKinds[cat] = kind;
+        });
+      }
+
       if (newEntries > 0) {
-        // ✅ Save everything
         localStorage.setItem("expenses", JSON.stringify(expenses));
         localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
         localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
 
-        // ✅ Refresh the app UI
         renderCategoryDropdown();
         updateRemainingBudget();
         showHistory();
@@ -625,12 +641,16 @@ function importData(event) {
       } else {
         alert("⚠️ All entries in the file already exist. No duplicates added.");
       }
-    } catch {
-      alert("❌ Error reading or parsing file.");
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error reading or parsing the file.");
     }
   };
+
   reader.readAsText(file);
 }
+
 
 
 // ==== Reset Function ====
