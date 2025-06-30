@@ -564,14 +564,22 @@ function renderDateEntries(entries, sortType, container) {
 // ==== Export Function ====
 function exportData() {
   const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  let hours = now.getHours(), minutes = now.getMinutes(), seconds = now.getSeconds();
+
+  const day = now.getDate();
+  const monthName = now.toLocaleString("en-US", { month: "long" }); // e.g., March
+  const year = now.getFullYear();
+
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  const timestamp = `${yyyy}-${mm}-${dd}_${String(hours).padStart(2, '0')}-${String(minutes).padStart(2, '0')}-${String(seconds).padStart(2, '0')}_${ampm}`;
-  const filename = `expense-backup-${timestamp}.json`;
+  hours = hours % 12 || 12; // convert to 12-hour format
+
+  const formattedDate = `${day} ${monthName} ${year}`;
+  const formattedTime = `${String(hours).padStart(2, '0')}-${minutes}-${seconds} ${ampm}`;
+  const timestamp = `${formattedDate} at ${formattedTime}`;
+
+  const filename = `Expense Backup - ${timestamp}.json`;
 
   const fullData = {
     expenses,
@@ -580,12 +588,14 @@ function exportData() {
   };
 
   const data = new Blob([JSON.stringify(fullData, null, 2)], { type: "application/json" });
+
   const a = document.createElement("a");
   a.href = URL.createObjectURL(data);
   a.download = filename;
   a.click();
   URL.revokeObjectURL(a.href);
 }
+
 
 
 // ==== Import Function ====
