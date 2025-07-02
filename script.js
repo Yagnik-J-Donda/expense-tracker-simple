@@ -3,6 +3,9 @@ let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
 let categoryLimits = JSON.parse(localStorage.getItem("categoryLimits") || "{}");
 let categoryKinds = JSON.parse(localStorage.getItem("categoryKinds") || "{}");
 
+let deletedCategories = JSON.parse(localStorage.getItem("deletedCategories") || "[]");
+
+
 document.getElementById("month-select").addEventListener("change", updateRemainingBudget);
 document.getElementById("year-select").addEventListener("change", updateRemainingBudget);
 
@@ -34,7 +37,7 @@ function renderCategoryDropdown() {
 
 
 // ==== State Variables ====
-checkAndHandleMonthChange();
+// checkAndHandleMonthChange();
 let undoStack = [];
 let lastOpenedMonthKey = null;
 let sortDescending = true;
@@ -196,6 +199,47 @@ function renderDateHistory(dateStr) {
 
   historyView.appendChild(table);
 }
+
+function renderRecycleBin() {
+  const binList = document.getElementById("recycle-bin-list");
+  binList.innerHTML = "";
+
+  if (deletedCategories.length === 0) {
+    binList.innerHTML = "<li><em>No deleted categories</em></li>";
+    return;
+  }
+
+  deletedCategories.forEach((entry, index) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <span>🗂️ ${entry.category} (${entry.monthKey})</span>
+      <button onclick="restoreCategory(${index})">♻️ Restore</button>
+    `;
+    binList.appendChild(li);
+  });
+}
+
+function restoreCategory(index) {
+  const entry = deletedCategories[index];
+  if (!entry) return;
+
+  const { category, monthKey } = entry;
+
+  // 🟢 Restore with default values (or prompt if needed)
+  categoryLimits[category] = 0;
+  categoryKinds[category] = "Flexible";
+
+  localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
+  localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
+
+  deletedCategories.splice(index, 1);
+  localStorage.setItem("deletedCategories", JSON.stringify(deletedCategories));
+
+  renderRecycleBin();
+  updateRemainingBudget();
+  alert(`Category "${category}" restored for ${monthKey}`);
+}
+
 
 // ==== Budget Display ====
 function updateRemainingBudget() {
@@ -770,6 +814,36 @@ function closeCategoryEditModal() {
   categoryBeingEdited = null;
 }
 
+// 🧩 3. Deletes the category edit modal
+function deleteCategory() {
+  const category = categoryBeingEdited;
+  if (!category) return;
+
+  const selectedMonthKey = getMonthKeyFromDate(new Date().toISOString());
+  const confirmDelete = confirm(`Are you sure you want to delete the category "${category}" for the selected month?`);
+
+  if (!confirmDelete) return;
+
+  // 🗑️ Move to recycle bin
+  deletedCategories.push({ category, monthKey: selectedMonthKey });
+  localStorage.setItem("deletedCategories", JSON.stringify(deletedCategories));
+
+  // 🧼 Remove from UI logic
+  delete categoryLimits[category];
+  delete categoryKinds[category];
+
+  localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
+  localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
+
+  updateRemainingBudget();
+  renderRecycleBin();
+  closeCategoryEditModal();
+
+  alert(`Category "${category}" deleted successfully for the selected month.`);
+}
+
+
+
 
 // ==== Auto-Sync Time ====
 function syncTimeToMinute() {
@@ -783,43 +857,43 @@ function syncTimeToMinute() {
 }
 syncTimeToMinute();
 
-function checkAndHandleMonthChange() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    const currentKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+// function checkAndHandleMonthChange() {
+//     const now = new Date();
+//     const currentMonth = now.getMonth();
+//     const currentYear = now.getFullYear();
+//     const currentKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
     
-    const lastMonthKey = localStorage.getItem("lastSavedMonth");
+//     const lastMonthKey = localStorage.getItem("lastSavedMonth");
     
-    if (lastMonthKey && lastMonthKey !== currentKey) {
-        // Save final budget snapshot
-        const finalSnapshot = document.getElementById("budget-body").innerHTML;
-        localStorage.setItem(`finalBudget_${lastMonthKey}`, finalSnapshot);
+//     if (lastMonthKey && lastMonthKey !== currentKey) {
+//         // Save final budget snapshot
+//         const finalSnapshot = document.getElementById("budget-body").innerHTML;
+//         localStorage.setItem(`finalBudget_${lastMonthKey}`, finalSnapshot);
         
-        // Ask user to download summary
-        if (confirm(`Download budget summary for ${lastMonthKey}?`)) {
-            const wrapper = document.createElement("table");
-            wrapper.innerHTML = `
-            <thead><tr><th>Type</th><th>Spent ($)</th><th>Remaining ($)</th><th>% Used</th><th>Usage vs Allocated</th></tr></thead>
-            <tbody>${finalSnapshot}</tbody>
-            `;
-            const blob = new Blob([wrapper.outerHTML], { type: "text/html" });
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `budget-summary-${lastMonthKey}.html`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-        }
+//         // Ask user to download summary
+//         if (confirm(`Download budget summary for ${lastMonthKey}?`)) {
+//             const wrapper = document.createElement("table");
+//             wrapper.innerHTML = `
+//             <thead><tr><th>Type</th><th>Spent ($)</th><th>Remaining ($)</th><th>% Used</th><th>Usage vs Allocated</th></tr></thead>
+//             <tbody>${finalSnapshot}</tbody>
+//             `;
+//             const blob = new Blob([wrapper.outerHTML], { type: "text/html" });
+//             const a = document.createElement("a");
+//             a.href = URL.createObjectURL(blob);
+//             a.download = `budget-summary-${lastMonthKey}.html`;
+//             a.click();
+//             URL.revokeObjectURL(a.href);
+//         }
         
-        // Clear all spent category values
-        expenses = [];
-        undoStack = [];
-        saveExpenses();
-    }
+//         // Clear all spent category values
+//         expenses = [];
+//         undoStack = [];
+//         saveExpenses();
+//     }
     
-    // Update the last saved month key
-    localStorage.setItem("lastSavedMonth", currentKey);
-}
+//     // Update the last saved month key
+//     localStorage.setItem("lastSavedMonth", currentKey);
+// }
 
 // function showPastBudgetSnapshots() {
 //     const view = document.getElementById("snapshot-view");
@@ -879,10 +953,10 @@ document.addEventListener("DOMContentLoaded", function () {
   if (savedKinds) Object.assign(categoryKinds, JSON.parse(savedKinds));
 
   // === Handle Done Button for Category Modal ===
-  const doneButton = document.getElementById("done-edit-button");
-  if (doneButton) {
-    doneButton.addEventListener("click", closeCategoryEditModal);
-  }
+  // const doneButton = document.getElementById("done-edit-button");
+  // if (doneButton) {
+  //   doneButton.addEventListener("click", closeCategoryEditModal);
+  // }
 
   // === Confirm Edit Modal Logic ===
   function confirmEditFixedCategory(callback) {
@@ -931,6 +1005,10 @@ document.addEventListener("DOMContentLoaded", function () {
       closeOnboardingModal();
     });
   }
+
+  // === Render Recycle bin ===
+  renderRecycleBin();
+
 });
 
 
@@ -1030,7 +1108,7 @@ function closeConfirmAddTypeModal() {
 }
 
 
-// Submit form with Enter key or "Apply" button
+// Submit form with Enter key or "Apply" button for changing esixting category
 document.getElementById("edit-category-form").addEventListener("submit", function (e) {
   e.preventDefault();
   applyCategoryEdit(); // apply but don’t force close

@@ -17,14 +17,21 @@
   <!-- 🔲 Sidebar Navigation -->
   <div id="nav-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999;"></div>
 
-  <div id="sidebar" style="position: fixed; top: 0; left: -250px; height: 100%; width: 250px; background-color: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.2); transition: left 0.3s ease; z-index: 1000; padding: 00px;">
-  </br></br></br>
-   <h3>⚙️ Settings</h3>
-    <button class="onboard" onclick="showOnboardingModalAgain()">❓ Onboarding Again</button>
-    <button class="import" onclick="document.getElementById('import-file').click()">📥 Import Backup</button>
-    <button class="export" onclick="exportData()">📤 Export Backup</button>
-    <button class="reset" onclick="resetAllData()">♻️ Reset All Data</button>
-  </div>
+<div id="sidebar" style="position: fixed; top: 0; left: -250px; height: 100%; width: 250px; background-color: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.2); transition: left 0.3s ease; z-index: 1000; padding: 20px; overflow-y: auto;">
+  <br><br><br>
+
+  <h3>⚙️ Settings</h3>
+  <button class="onboard" onclick="showOnboardingModalAgain()">❓ Onboarding Again</button>
+  <button class="import" onclick="document.getElementById('import-file').click()">📥 Import Backup</button>
+  <button class="export" onclick="exportData()">📤 Export Backup</button>
+  <button class="reset" onclick="resetAllData()">♻️ Reset All Data</button>
+
+  <hr />
+
+  <h3>🗑️ Recycle Bin</h3>
+  <ul id="recycle-bin-list" style="list-style: none; padding-left: 0;"></ul>
+</div>
+
 
   <!-- Hidden input for Import -->
   <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
@@ -44,12 +51,11 @@
       <input type="number" id="amount" step="0.01" min="0" placeholder="Enter amount" required />
 
       <button type="submit">Add Expense</button>
-      <button type="button" onclick="exportData()">Export Backup (.json)</button>
-
+      
+      <!-- <button type="button" onclick="exportData()">Export Backup (.json)</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
       <button type="button" onclick="document.getElementById('import-file').click()">Import Backup (.json)</button>
-
-      <button id="reset-btn" type="button" onclick="resetAllData()">Reset All Data</button>
+      <button id="reset-btn" type="button" onclick="resetAllData()">Reset All Data</button> -->
 
       <div class="action-buttons">
         <button type="button" onclick="undoLastEntry()">Undo Last Entry</button>
@@ -136,7 +142,7 @@
 <div id="edit-category-modal" style="display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, 0); background: #fff; border: 2px solid #ccc; padding: 20px; border-radius: 8px; z-index: 1000; width: 300px;">
 
   <!-- ✅ Done Button (top-right) -->
-  <button type="button" id="done-edit-button" style="position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 2px 6px;">✅ Done</button>
+  <!-- <button type="button" id="done-edit-button" style="position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 2px 6px;">✅ Done</button> -->
 
   <h3>Edit Category</h3>
   <form id="edit-category-form">
@@ -150,7 +156,8 @@
       <input type="number" id="edit-type-limit" step="0.01" />
     </label>
     <br><br>
-    <button type="submit">✅ Apply</button>
+    <button type="submit">✅ Edit Categoty</button>
+    <button type="button" onclick="deleteCategory()">✅ Delete Categoty</button>
     <button type="button" onclick="closeCategoryEditModal()">❌ Cancel</button>
   </form>
 </div>

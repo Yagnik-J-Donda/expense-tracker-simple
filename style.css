@@ -86,7 +86,7 @@ body {
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   transition: left 0.3s ease;
   z-index: 1000;
-  padding: 20px;
+  /* padding: 20px; */
 }
 
 #sidebar.sidebar-open {
@@ -100,7 +100,32 @@ body {
   pointer-events: auto; /* Re-enable when visible */
 }
 
+#sidebar button:hover {
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
 
+#recycle-bin-list li {
+  margin-bottom: 6px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#recycle-bin-list button {
+  background-color: #e6ffe6;
+  color: #117a11;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+#recycle-bin-list button:hover {
+  background-color: #ccf2cc;
+}
 
 #menu-toggle {
   position: fixed;
@@ -619,7 +644,7 @@ label + .date-sort-dropdown {
 }
 
 /* ✅ Style for Done button (top-right) */
-#done-edit-button {
+/* #done-edit-button {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -631,11 +656,11 @@ label + .date-sort-dropdown {
   border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-}
+} */
 
-#done-edit-button:hover {
+/* #done-edit-button:hover {
   background: #1e8449;
-}
+} */
 
 @media (max-width: 400px) {
   #edit-category-modal {
@@ -666,8 +691,4 @@ label + .date-sort-dropdown {
   background-color: #eee;
 }
 
-#sidebar button:hover {
-  background-color: #f0f0f0;
-  border-radius: 4px;
-}
 
