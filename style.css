@@ -21,46 +21,56 @@ body {
   top: 20px;
   left: 20px;
   z-index: 1001;
-  background: #fff;
+  background: #1756a1;
   padding: 8px 12px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);  
-  backdrop-filter: blur(1px);
+  backdrop-filter: blur(2px);
   transition: background 0.3s ease;
 }
 
-/* Base button style for all sidebar actions */
-#sidebar button {
-  background-color: transparent;
-  border: none;
-  color: #333;
-  font-size: 16px;
-  text-align: left;
-  padding: 10px 12px;
+/* #menu-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1100; /* Above nav and content */
+  /* background: #ffffff;
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   cursor: pointer;
-  border-radius: 6px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  width: 100%;
+  transition: background 0.3s;
+} */
+
+/* #menu-toggle:hover {
+  background: #721111;
+} */
+
+#menu-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1100; /* Stay above all content */
+  background: #1756a1; /* Main background color */
+  border: none;
+  color: white; /* Icon color */
+  padding: 10px 14px;
+  border-radius: 8px; /* Circle button for floating effect */
+  font-size: 24px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Deep shadow for floating */
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-/* 🟩 Onboarding Again - Green background on hover */
-#sidebar button.onboard:hover {
-  background-color: #e6f5e6; /* light green */
-  color: #167a17;
+#menu-toggle:hover {
+  background: #017223; /* Change background on hover */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Stronger shadow on hover */
+  transform: translateY(-2px); /* Lift up slightly */
 }
 
-/* 🔵 Import & Export - Blue background on hover */
-#sidebar button.import:hover,
-#sidebar button.export:hover {
-  background-color: #e6f0ff; /* light blue */
-  color: #1756a1;
-}
 
-/* 🔴 Reset - Red background on hover */
-#sidebar button.reset:hover {
-  background-color: #ffeaea; /* light red */
-  color: #b30000;
-}
 /* #sidebar {
   position: fixed;
   top: 0;
@@ -86,13 +96,12 @@ body {
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   transition: left 0.3s ease;
   z-index: 1000;
-  /* padding: 20px; */
+  padding: 20px;
 }
 
 #sidebar.sidebar-open {
   left: 0; /* Slide in when active */
 }
-
 
 
 #sidebar.active {
@@ -127,25 +136,38 @@ body {
   background-color: #ccf2cc;
 }
 
-#menu-toggle {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 1100; /* Above nav and content */
-  background: #ffffff;
-  border: 1px solid #ccc;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+/* Base button style for all sidebar actions */
+#sidebar button {
+  background-color: transparent;
+  border: none;
+  color: #333;
+  font-size: 16px;
+  text-align: left;
+  padding: 10px 12px;
   cursor: pointer;
-  transition: background 0.3s;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  width: 100%;
 }
 
-#menu-toggle:hover {
-  background: #f0f0f0;
+/* 🟩 Onboarding Again - Green background on hover */
+#sidebar button.onboard:hover {
+  background-color: #e6f5e6; /* light green */
+  color: #167a17;
 }
 
+/* 🔵 Import & Export - Blue background on hover */
+#sidebar button.import:hover,
+#sidebar button.export:hover {
+  background-color: #e6f0ff; /* light blue */
+  color: #1756a1;
+}
+
+/* 🔴 Reset - Red background on hover */
+#sidebar button.reset:hover {
+  background-color: #ffeaea; /* light red */
+  color: #b30000;
+}
 
 
 /* Main content */
