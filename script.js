@@ -269,13 +269,18 @@ function updateRemainingBudget() {
 
     const row = document.createElement("tr");
     row.innerHTML = `
-        <td style="cursor: pointer; color: #0077cc;" onclick="openCategoryEditModal('${category}')">${category}</td>
-        <td>$${used.toFixed(2)}</td>
-        <td><strong>$${remaining.toFixed(2)}</strong></td>
-        <td style="color: ${limit > 0 ? 'green' : 'gray'}">$${limit.toFixed(2)}</td>
-        <td>${percentUsed}%</td>
-        <td>${usedOfTotal}% / ${allocationPercent}%</td>
+      <td style="cursor: pointer; color: #3f51b5;" onclick="openCategoryEditModal('${category}')">${category}</td>
+      <td>
+        <span style="color: #f57c00; cursor: pointer; text-decoration: underline;" onclick="viewCategoryExpenses('${category}')">
+          $${used.toFixed(2)}
+        </span>
+      </td>
+      <td style="color: #388e3c;">$${remaining.toFixed(2)}</td>
+      <td><strong style="color: #0077cc;">$${limit.toFixed(2)}</strong></td>
+      <td>${percentUsed}%</td>
+      <td>${usedOfTotal}% / ${allocationPercent}%</td>
     `;
+
     tableBody.appendChild(row);
   });
 
@@ -310,7 +315,50 @@ function updateRemainingBudget() {
   `;
 }
 
+// 📋 Show a modal listing all expenses for a specific category and month
+function viewCategoryExpenses(category) {
+  // Get the currently selected month and year from dropdowns
+  const selectedMonth = parseInt(document.getElementById("month-select").value);
+  const selectedYear = parseInt(document.getElementById("year-select").value);
 
+  // Get references to modal elements
+  const modal = document.getElementById("category-expense-modal");
+  const title = document.getElementById("expense-modal-title");
+  const list = document.getElementById("expense-list");
+
+  // Set modal title to include the selected category name
+  title.textContent = `💼 Expenses for "${category}"`;
+
+  // 🔍 Filter expenses for:
+  // - matching category
+  // - matching selected month and year
+  const filtered = expenses.filter(e => {
+    const d = new Date(e.date);
+    return e.category === category &&
+           d.getMonth() === selectedMonth &&
+           d.getFullYear() === selectedYear;
+  });
+
+  // 📝 Display filtered expenses or show "No expenses" message
+  if (filtered.length === 0) {
+    list.innerHTML = `<p>No expenses found for this category this month.</p>`;
+  } else {
+    list.innerHTML = filtered.map(e => `
+      <div style="padding:6px 0; border-bottom:1px solid #eee;">
+        📅 <b>${new Date(e.date).toLocaleDateString()}</b> – 💵 $${e.amount.toFixed(2)}
+      </div>
+    `).join("");
+  }
+
+  // 📦 Show the modal
+  modal.style.display = "block";
+}
+
+// ❌ Close the category expenses modal
+function closeCategoryExpenseModal() {
+  const modal = document.getElementById("category-expense-modal");
+  if (modal) modal.style.display = "none";
+}
 
 // ==== History View Grouped by Month and Date ====
 function showHistory(keepOpen = false) {

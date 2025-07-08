@@ -201,6 +201,16 @@
   </div>
 </div>
 
+<!-- 📋 Category Expense Details Modal -->
+<div id="category-expense-modal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -20%); background:#fff; border:2px solid #ccc; padding:20px; border-radius:10px; z-index:2000; width:90%; max-width:500px;">
+  <h3 id="expense-modal-title">Category Expenses</h3>
+  <div id="expense-list" style="max-height:300px; overflow-y:auto; margin-top:10px; border-top:1px solid #ddd; padding-top:10px;"></div>
+  <div style="text-align:right; margin-top:10px;">
+    <button onclick="closeCategoryExpenseModal()">❌ Close</button>
+  </div>
+</div>
+
+
 </div>
   <footer class="footer">
     © 2025 <strong>YEM – Your Expense Manager</strong>. All rights reserved.
