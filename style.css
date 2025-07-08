@@ -266,6 +266,13 @@ table {
   margin-top: 10px;
 }
 
+td.projected {
+  color: #1756a1; /* Normal */
+}
+td.projected.over {
+  color: red; /* Over limit */
+}
+
 th, td {
   border: 1px solid #ddd;
   padding: 10px;

@@ -272,28 +272,28 @@ function updateRemainingBudget() {
         <td style="cursor: pointer; color: #0077cc;" onclick="openCategoryEditModal('${category}')">${category}</td>
         <td>$${used.toFixed(2)}</td>
         <td><strong>$${remaining.toFixed(2)}</strong></td>
+        <td style="color: ${limit > 0 ? 'green' : 'gray'}">$${limit.toFixed(2)}</td>
         <td>${percentUsed}%</td>
         <td>${usedOfTotal}% / ${allocationPercent}%</td>
     `;
     tableBody.appendChild(row);
   });
 
-  // 📊 Total Summary Box: Shows total spent, remaining, and % used
+  // 📊 Total Summary Box: Shows total spent, remaining, projected, and % used
   const totalSummaryBox = document.getElementById("total-summary");
 
   let totalUsed = 0;
   let fullLimit = 0;
 
   for (let category in categoryLimits) {
-    const used = spent[category] || 0;
-    totalUsed += used;
+    totalUsed += spent[category] || 0;
     fullLimit += categoryLimits[category];
   }
 
   const totalRemaining = fullLimit - totalUsed;
   const percentUsed = fullLimit > 0 ? ((totalUsed / fullLimit) * 100).toFixed(1) : "0.0";
 
-totalSummaryBox.innerHTML = `
+  totalSummaryBox.innerHTML = `
   <div class="total-summary-grid">
     <div class="label">💸 Total Spent:</div>
     <div class="value">$${totalUsed.toFixed(2)}</div>
@@ -301,12 +301,15 @@ totalSummaryBox.innerHTML = `
     <div class="label">💼 Total Remaining:</div>
     <div class="value">$${totalRemaining.toFixed(2)}</div>
 
+    <div class="label">📈 Total Projected:</div>
+    <div class="value" style="color: ${fullLimit > 0 ? 'green' : 'gray'}">$${fullLimit.toFixed(2)}</div>
+
     <div class="label">📊 Used:</div>
     <div class="value">${percentUsed}%</div>
   </div>
-`;
-
+  `;
 }
+
 
 
 // ==== History View Grouped by Month and Date ====
@@ -946,17 +949,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   overlay.addEventListener("click", closeSidebar);
 
+  // 🆕 Force-close sidebar on page load
+  closeSidebar();
+
   // === Load Saved Categories ===
   const savedLimits = localStorage.getItem("categoryLimits");
   const savedKinds = localStorage.getItem("categoryKinds");
   if (savedLimits) Object.assign(categoryLimits, JSON.parse(savedLimits));
   if (savedKinds) Object.assign(categoryKinds, JSON.parse(savedKinds));
-
-  // === Handle Done Button for Category Modal ===
-  // const doneButton = document.getElementById("done-edit-button");
-  // if (doneButton) {
-  //   doneButton.addEventListener("click", closeCategoryEditModal);
-  // }
 
   // === Confirm Edit Modal Logic ===
   function confirmEditFixedCategory(callback) {
@@ -1010,6 +1010,7 @@ document.addEventListener("DOMContentLoaded", function () {
   renderRecycleBin();
 
 });
+
 
 
 
