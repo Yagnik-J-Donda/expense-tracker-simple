@@ -272,10 +272,15 @@ function updateRemainingBudget() {
       <td style="cursor: pointer; color: #3f51b5;" onclick="openCategoryEditModal('${category}')">${category}</td>
       <td>
         <span style="color: #f57c00; cursor: pointer; text-decoration: underline;" onclick="viewCategoryExpenses('${category}')">
-          $${used.toFixed(2)}
+          <strong>$${used.toFixed(2)}</strong>
         </span>
+
+        <span style="color: #f57c00; cursor: pointer; text-decoration: underline;" onclick="viewCategoryExpenses('${category}')">
+          <strong style="color: inherit;">$${used.toFixed(2)}</strong>
+        </span>
+
       </td>
-      <td style="color: #388e3c;">$${remaining.toFixed(2)}</td>
+      <td><strong style="color: #388e3c;">$${remaining.toFixed(2)}</strong></td>
       <td><strong style="color: #0077cc;">$${limit.toFixed(2)}</strong></td>
       <td>${percentUsed}%</td>
       <td>${usedOfTotal}% / ${allocationPercent}%</td>
