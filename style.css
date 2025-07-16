@@ -869,4 +869,32 @@ label + .date-sort-dropdown {
   }
 }
 
+#scrollToTopBtn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background-color: #0077cc; /* Material Purple */
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3); /* Material shadow */
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.3s ease;
+}
+
+#scrollToTopBtn:hover {
+  background-color: #1756a1; /* Darker shade on hover */
+  transform: scale(1.1); /* Slight zoom on hover */
+}
+
+
 
