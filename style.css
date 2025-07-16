@@ -896,5 +896,23 @@ label + .date-sort-dropdown {
   transform: scale(1.1); /* Slight zoom on hover */
 }
 
+/* 🪄 Responsive adjustments */
+@media (max-width: 768px) {
+  #scrollToTopBtn {
+    width: 48px; /* Slightly smaller on tablets */
+    height: 48px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  #scrollToTopBtn {
+    width: 40px; /* Even smaller on mobile */
+    height: 40px;
+    font-size: 18px;
+    bottom: 15px; /* Adjust position for smaller screens */
+    left: 15px;
+  }
+}
 
 
