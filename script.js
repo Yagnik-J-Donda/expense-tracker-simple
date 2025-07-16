@@ -1174,7 +1174,7 @@ document.addEventListener("keydown", function (event) {
 
 // 📊 Show Yearly, Half-Yearly, and Quarterly Averages for each category
 // 📊 Calculates and populates Yearly, Half-Yearly, and Quarterly Averages
-function showAverages() {
+/*function showAverages() {
   const now = new Date();
 
   // 🗓️ Define time ranges
@@ -1253,7 +1253,68 @@ function showAverages() {
     `;
     tbody.innerHTML += row;
   });
+}*/
+
+// 📊 Calculates and populates Per Month Averages for Yearly, Half-Yearly, and Quarterly
+function showAverages() {
+  const now = new Date();
+
+  // 🗓️ Set range limits
+  const periods = {
+    yearly: 12,
+    halfYearly: 6,
+    quarterly: 3
+  };
+
+  // 📦 Initialize monthly totals per category
+  const monthlyTotals = {}; // { category: [month1Total, month2Total, ..., month12Total] }
+
+  // Fill monthlyTotals with 0s for each category
+  Object.keys(categoryLimits).forEach(category => {
+    monthlyTotals[category] = Array(12).fill(0);
+  });
+
+  // 🔄 Loop through all expenses and sum them per category per month
+  expenses.forEach(exp => {
+    const expDate = new Date(exp.date);
+    const diffInMonths = (now.getFullYear() - expDate.getFullYear()) * 12 + (now.getMonth() - expDate.getMonth());
+
+    if (diffInMonths >= 0 && diffInMonths < 12) {
+      // Inside last 12 months
+      const category = exp.category;
+      monthlyTotals[category][11 - diffInMonths] += exp.amount;
+    }
+  });
+
+  // 📝 Populate the averages table
+  const tbody = document.querySelector("#averages-table tbody");
+  tbody.innerHTML = ""; // Clear previous rows
+
+  Object.keys(monthlyTotals).forEach(category => {
+    const totals = monthlyTotals[category];
+
+    // 📊 Compute per-month averages
+    const yearlySum = totals.reduce((sum, val) => sum + val, 0);
+    const halfYearlySum = totals.slice(-6).reduce((sum, val) => sum + val, 0);
+    const quarterlySum = totals.slice(-3).reduce((sum, val) => sum + val, 0);
+
+    const yearlyAvg = (yearlySum / periods.yearly).toFixed(2);
+    const halfYearlyAvg = (halfYearlySum / periods.halfYearly).toFixed(2);
+    const quarterlyAvg = (quarterlySum / periods.quarterly).toFixed(2);
+
+    // 📦 Add row to the table
+    const row = `
+      <tr>
+        <td>${category}</td>
+        <td>$${yearlyAvg}</td>
+        <td>$${halfYearlyAvg}</td>
+        <td>$${quarterlyAvg}</td>
+      </tr>
+    `;
+    tbody.innerHTML += row;
+  });
 }
+
 // 📊 Toggle the Averages Section with Smooth Animation
 function toggleAverages() {
   const section = document.getElementById("averages-section");
