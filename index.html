@@ -142,30 +142,36 @@
     <div id="history-view" class="history-container"></div>
   </div>
 
- <!-- 📊 Toggle Button for Averages -->
+<!-- 📊 Toggle Button for Full View Averages -->
 <div class="action-buttons" style="margin-top: 20px; text-align: center;">
   <button id="view-averages-btn" onclick="toggleAverages()">
     📊 View Category Averages
   </button>
 </div>
 
-<!-- 📊 Averages Section -->
+<!-- 📊 Full View Averages Section -->
 <div id="averages-section" class="averages-container" style="display: none;">
-  <h2>📊 Category Averages</h2>
+  <h2>📊 Category Averages (Q1–Q4, H1–H2, Yearly)</h2>
   <div class="table-wrapper">
     <table id="averages-table">
       <thead>
         <tr>
           <th>Category</th>
+          <th>Q1 (Jan–Mar)</th>
+<th>Q2 (Apr–Jun)</th>
+<th>Q3 (Jul–Sep)</th>
+<th>Q4 (Oct–Dec)</th>
+<th>H1 (Jan–Jun)</th>
+<th>H2 (Jul–Dec)</th>
+
           <th>Yearly Avg ($)</th>
-          <th>Half-Yearly Avg ($)</th>
-          <th>Quarterly Avg ($)</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 </div>
+
 
 
 

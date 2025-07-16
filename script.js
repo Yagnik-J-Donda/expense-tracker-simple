@@ -1256,33 +1256,39 @@ document.addEventListener("keydown", function (event) {
 }*/
 
 // 📊 Calculates and populates Per Month Averages for Yearly, Half-Yearly, and Quarterly
+// 📊 Show Full View Averages (Q1–Q4, H1–H2, Yearly)
+
 function showAverages() {
   const now = new Date();
+  const currentYear = now.getFullYear();
 
-  // 🗓️ Set range limits
-  const periods = {
-    yearly: 12,
-    halfYearly: 6,
-    quarterly: 3
+  // 🗓️ Define quarters and halves
+  const quarters = {
+    Q1: [0, 1, 2],   // Jan, Feb, Mar
+    Q2: [3, 4, 5],   // Apr, May, Jun
+    Q3: [6, 7, 8],   // Jul, Aug, Sep
+    Q4: [9, 10, 11]  // Oct, Nov, Dec
+  };
+
+  const halves = {
+    H1: [0, 1, 2, 3, 4, 5],  // Jan–Jun
+    H2: [6, 7, 8, 9, 10, 11] // Jul–Dec
   };
 
   // 📦 Initialize monthly totals per category
-  const monthlyTotals = {}; // { category: [month1Total, month2Total, ..., month12Total] }
+  const monthlyTotals = {}; // { category: [month0, month1, ..., month11] }
 
-  // Fill monthlyTotals with 0s for each category
   Object.keys(categoryLimits).forEach(category => {
     monthlyTotals[category] = Array(12).fill(0);
   });
 
-  // 🔄 Loop through all expenses and sum them per category per month
+  // 🔄 Loop through all expenses and sum totals per category per month
   expenses.forEach(exp => {
     const expDate = new Date(exp.date);
-    const diffInMonths = (now.getFullYear() - expDate.getFullYear()) * 12 + (now.getMonth() - expDate.getMonth());
-
-    if (diffInMonths >= 0 && diffInMonths < 12) {
-      // Inside last 12 months
+    if (expDate.getFullYear() === currentYear) {
+      const monthIndex = expDate.getMonth(); // 0 = Jan, 11 = Dec
       const category = exp.category;
-      monthlyTotals[category][11 - diffInMonths] += exp.amount;
+      monthlyTotals[category][monthIndex] += exp.amount;
     }
   });
 
@@ -1293,22 +1299,28 @@ function showAverages() {
   Object.keys(monthlyTotals).forEach(category => {
     const totals = monthlyTotals[category];
 
-    // 📊 Compute per-month averages
-    const yearlySum = totals.reduce((sum, val) => sum + val, 0);
-    const halfYearlySum = totals.slice(-6).reduce((sum, val) => sum + val, 0);
-    const quarterlySum = totals.slice(-3).reduce((sum, val) => sum + val, 0);
+    // 📊 Compute averages
+    const qAverages = Object.values(quarters).map(q =>
+      (q.reduce((sum, m) => sum + totals[m], 0) / 3).toFixed(2)
+    );
 
-    const yearlyAvg = (yearlySum / periods.yearly).toFixed(2);
-    const halfYearlyAvg = (halfYearlySum / periods.halfYearly).toFixed(2);
-    const quarterlyAvg = (quarterlySum / periods.quarterly).toFixed(2);
+    const hAverages = Object.values(halves).map(h =>
+      (h.reduce((sum, m) => sum + totals[m], 0) / 6).toFixed(2)
+    );
+
+    const yearlyAvg = (totals.reduce((sum, val) => sum + val, 0) / 12).toFixed(2);
 
     // 📦 Add row to the table
     const row = `
       <tr>
         <td>${category}</td>
+        <td>$${qAverages[0]}</td>
+        <td>$${qAverages[1]}</td>
+        <td>$${qAverages[2]}</td>
+        <td>$${qAverages[3]}</td>
+        <td>$${hAverages[0]}</td>
+        <td>$${hAverages[1]}</td>
         <td>$${yearlyAvg}</td>
-        <td>$${halfYearlyAvg}</td>
-        <td>$${quarterlyAvg}</td>
       </tr>
     `;
     tbody.innerHTML += row;
@@ -1338,6 +1350,7 @@ function toggleAverages() {
     btn.textContent = "📊 View Category Averages";
   }
 }
+
 
 
 // ==== Initial Load ====

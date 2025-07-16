@@ -800,5 +800,73 @@ label + .date-sort-dropdown {
   opacity: 1;
 }
 
+/* 📊 Full View Averages Container */
+.averages-container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.averages-container h2 {
+  text-align: center;
+  color: #1756a1; /* Consistent with app color theme */
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+#averages-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#averages-table th, #averages-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+#averages-table th {
+  background-color: #f2f2f2;
+  color: #333;
+  font-weight: bold;
+}
+
+#averages-table td {
+  color: #555;
+}
+
+#averages-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* 📊 Toggle Button Styling */
+#view-averages-btn {
+  background-color: #1756a1; /* Main button color */
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#view-averages-btn:hover {
+  background-color: #0d3f75; /* Darker blue on hover */
+  transform: translateY(-2px);
+}
+
+/* 📱 Responsive Table */
+@media (max-width: 600px) {
+  #averages-table th, #averages-table td {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+}
 
 
