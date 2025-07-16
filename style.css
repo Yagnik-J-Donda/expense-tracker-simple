@@ -877,7 +877,6 @@ label + .date-sort-dropdown {
   width: 56px;
   height: 56px;
   border: none;
-  /* border-radius: 50%; */
   background-color: #0077cc; /* Material Purple */
   color: white;
   font-size: 18px;
