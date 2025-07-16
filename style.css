@@ -874,13 +874,13 @@ label + .date-sort-dropdown {
   bottom: 20px;
   left: 20px;
   z-index: 1000;
-  width: 36px;
-  height: 36px;
+  width: 56px;
+  height: 56px;
   border: none;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   background-color: #0077cc; /* Material Purple */
   color: white;
-  font-size: 20px;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
