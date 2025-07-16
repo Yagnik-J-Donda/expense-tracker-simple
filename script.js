@@ -1172,6 +1172,112 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
+// 📊 Show Yearly, Half-Yearly, and Quarterly Averages for each category
+// 📊 Calculates and populates Yearly, Half-Yearly, and Quarterly Averages
+function showAverages() {
+  const now = new Date();
+
+  // 🗓️ Define time ranges
+  const oneYearAgo = new Date(now);
+  oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+  const sixMonthsAgo = new Date(now);
+  sixMonthsAgo.setMonth(now.getMonth() - 6);
+
+  const threeMonthsAgo = new Date(now);
+  threeMonthsAgo.setMonth(now.getMonth() - 3);
+
+  // 📦 Initialize totals and counts for each category
+  const categoryTotals = {};
+  const categoryCounts = {
+    yearly: {},
+    halfYearly: {},
+    quarterly: {}
+  };
+
+  // 🔄 Loop through all expenses to accumulate totals and counts
+  expenses.forEach(exp => {
+    if (!categoryTotals[exp.category]) {
+      categoryTotals[exp.category] = { yearly: 0, halfYearly: 0, quarterly: 0 };
+      categoryCounts.yearly[exp.category] = 0;
+      categoryCounts.halfYearly[exp.category] = 0;
+      categoryCounts.quarterly[exp.category] = 0;
+    }
+
+    const expDate = new Date(exp.date);
+
+    // 📅 Yearly
+    if (expDate >= oneYearAgo) {
+      categoryTotals[exp.category].yearly += exp.amount;
+      categoryCounts.yearly[exp.category]++;
+    }
+
+    // 📆 Half-Yearly
+    if (expDate >= sixMonthsAgo) {
+      categoryTotals[exp.category].halfYearly += exp.amount;
+      categoryCounts.halfYearly[exp.category]++;
+    }
+
+    // 📌 Quarterly
+    if (expDate >= threeMonthsAgo) {
+      categoryTotals[exp.category].quarterly += exp.amount;
+      categoryCounts.quarterly[exp.category]++;
+    }
+  });
+
+  // 📝 Populate the averages table
+  const tbody = document.querySelector("#averages-table tbody");
+  tbody.innerHTML = ""; // Clear previous rows
+
+  Object.keys(categoryTotals).forEach(category => {
+    const yearlyAvg = categoryCounts.yearly[category]
+      ? (categoryTotals[category].yearly / categoryCounts.yearly[category]).toFixed(2)
+      : "0.00";
+
+    const halfYearlyAvg = categoryCounts.halfYearly[category]
+      ? (categoryTotals[category].halfYearly / categoryCounts.halfYearly[category]).toFixed(2)
+      : "0.00";
+
+    const quarterlyAvg = categoryCounts.quarterly[category]
+      ? (categoryTotals[category].quarterly / categoryCounts.quarterly[category]).toFixed(2)
+      : "0.00";
+
+    // 📦 Add row to the table
+    const row = `
+      <tr>
+        <td>${category}</td>
+        <td>$${yearlyAvg}</td>
+        <td>$${halfYearlyAvg}</td>
+        <td>$${quarterlyAvg}</td>
+      </tr>
+    `;
+    tbody.innerHTML += row;
+  });
+}
+// 📊 Toggle the Averages Section with Smooth Animation
+function toggleAverages() {
+  const section = document.getElementById("averages-section");
+  const btn = document.getElementById("view-averages-btn");
+
+  if (section.style.display === "none" || section.style.display === "") {
+    // ▶️ Show section
+    showAverages(); // Populate data
+    section.style.display = "block"; // Make visible
+    setTimeout(() => {
+      section.classList.add("show"); // Fade in
+    }, 10);
+    btn.textContent = "🔽 Hide Category Averages";
+    section.scrollIntoView({ behavior: "smooth" });
+  } else {
+    // ⏹ Hide section
+    section.classList.remove("show"); // Start fade out
+    setTimeout(() => {
+      section.style.display = "none"; // Fully hide after fade out
+    }, 300); // Match CSS transition time
+    btn.textContent = "📊 View Category Averages";
+  }
+}
+
 
 // ==== Initial Load ====
 // 🔧 Initial setup: save current data and show current month/year view

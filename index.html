@@ -142,6 +142,35 @@
     <div id="history-view" class="history-container"></div>
   </div>
 
+ <!-- 📊 Toggle Button for Averages -->
+<div class="action-buttons" style="margin-top: 20px; text-align: center;">
+  <button id="view-averages-btn" onclick="toggleAverages()">
+    📊 View Category Averages
+  </button>
+</div>
+
+<!-- 📊 Averages Section -->
+<div id="averages-section" class="averages-container" style="display: none;">
+  <h2>📊 Category Averages</h2>
+  <div class="table-wrapper">
+    <table id="averages-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Yearly Avg ($)</th>
+          <th>Half-Yearly Avg ($)</th>
+          <th>Quarterly Avg ($)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+
 <!-- 🔧 Modal Popup for Editing Category -->
 <!-- 🔧 Modal Popup for Editing Category -->
 <div id="edit-category-modal" style="display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, 0); background: #fff; border: 2px solid #ccc; padding: 20px; border-radius: 8px; z-index: 1000; width: 300px;">
