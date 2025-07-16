@@ -1255,9 +1255,9 @@ document.addEventListener("keydown", function (event) {
   });
 }*/
 
-// 📊 Calculates and populates Per Month Averages for Yearly, Half-Yearly, and Quarterly
 // 📊 Show Full View Averages (Q1–Q4, H1–H2, Yearly)
-
+// 📊 Calculates and populates Per Month Averages for Yearly, Half-Yearly, and Quarterly
+// 📊 Show Full View Averages (Q1–Q4, H1–H2, Yearly) with zero-check fix
 function showAverages() {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -1299,16 +1299,24 @@ function showAverages() {
   Object.keys(monthlyTotals).forEach(category => {
     const totals = monthlyTotals[category];
 
-    // 📊 Compute averages
-    const qAverages = Object.values(quarters).map(q =>
-      (q.reduce((sum, m) => sum + totals[m], 0) / 3).toFixed(2)
-    );
+    // 📊 Compute Quarter Averages (Q1–Q4)
+    const qAverages = Object.values(quarters).map(q => {
+      const quarterTotal = q.reduce((sum, m) => sum + totals[m], 0);
+      const hasExpenses = q.some(m => totals[m] > 0);
+      return hasExpenses ? (quarterTotal / 3).toFixed(2) : "0.00";
+    });
 
-    const hAverages = Object.values(halves).map(h =>
-      (h.reduce((sum, m) => sum + totals[m], 0) / 6).toFixed(2)
-    );
+    // 📊 Compute Half-Year Averages (H1 & H2)
+    const hAverages = Object.values(halves).map(h => {
+      const halfTotal = h.reduce((sum, m) => sum + totals[m], 0);
+      const hasExpenses = h.some(m => totals[m] > 0);
+      return hasExpenses ? (halfTotal / 6).toFixed(2) : "0.00";
+    });
 
-    const yearlyAvg = (totals.reduce((sum, val) => sum + val, 0) / 12).toFixed(2);
+    // 📊 Compute Yearly Average
+    const yearlyTotal = totals.reduce((sum, val) => sum + val, 0);
+    const hasYearlyExpenses = yearlyTotal > 0;
+    const yearlyAvg = hasYearlyExpenses ? (yearlyTotal / 12).toFixed(2) : "0.00";
 
     // 📦 Add row to the table
     const row = `
@@ -1326,6 +1334,7 @@ function showAverages() {
     tbody.innerHTML += row;
   });
 }
+
 
 // 📊 Toggle the Averages Section with Smooth Animation
 function toggleAverages() {
