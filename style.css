@@ -915,3 +915,6 @@ label + .date-sort-dropdown {
 }
 
 
+.no-scroll {
+  overflow: hidden;
+}

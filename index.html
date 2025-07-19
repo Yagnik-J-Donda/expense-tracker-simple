@@ -11,15 +11,15 @@
 
 <div class="wrapper">
 
-  <!-- ☰ Hamburger Button (Floating) -->
-  <!-- <button id="menu-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1100; background: white; border: none; font-size: 24px; cursor: pointer; padding: 6px 10px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">☰</button> -->
-  <!-- <button id="menu-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1100; border: none; font-size: 24px; cursor: pointer; padding: 6px 10px; border-radius: 6px; box-shadow: 0 2px 6px rgba(253, 251, 251, 0.2);">☰</button> -->
-  <button id="menu-toggle">☰</button>
+<!-- ☰ Hamburger Button (Floating) -->
+<!-- <button id="menu-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1100; background: white; border: none; font-size: 24px; cursor: pointer; padding: 6px 10px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">☰</button> -->
+<!-- <button id="menu-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1100; border: none; font-size: 24px; cursor: pointer; padding: 6px 10px; border-radius: 6px; box-shadow: 0 2px 6px rgba(253, 251, 251, 0.2);">☰</button> -->
+<button id="menu-toggle">☰</button>
 
 
 
-  <!-- 🔲 Sidebar Navigation -->
-  <div id="nav-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999;"></div>
+<!-- 🔲 Sidebar Navigation -->
+<div id="nav-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999;"></div>
 
 <div id="sidebar" style="position: fixed; top: 0; left: -250px; height: 100%; width: 250px; background-color: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.2); transition: left 0.3s ease; z-index: 1000; padding: 20px; overflow-y: auto;">
   <br><br><br>
@@ -44,28 +44,31 @@
     <h1>YEM</h1>
     <h2>(Your Expense Manager) </h2>
     
-    <form id="expense-form">
-      <input type="datetime-local" id="date" required />
+   <form id="expense-form">
+  <input type="datetime-local" id="date" required />
 
-    <select id="category" required>
-        <option value="">--Select Category--</option>
-    </select>
+  <select id="category" required>
+    <option value="">--Select Category--</option>
+  </select>
 
+  <input type="number" id="amount" step="0.01" min="0" placeholder="Enter amount" required />
 
-      <input type="number" id="amount" step="0.01" min="0" placeholder="Enter amount" required />
+  <!-- 🔥 New Details Field -->
+  <input type="text" id="details" placeholder="Enter details or sub-type (optional)" />
 
-      <button type="submit">Add Expense</button>
-      
-      <!-- <button type="button" onclick="exportData()">Export Backup (.json)</button>
-      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
-      <button type="button" onclick="document.getElementById('import-file').click()">Import Backup (.json)</button>
-      <button id="reset-btn" type="button" onclick="resetAllData()">Reset All Data</button> -->
+  <button type="submit">Add Expense</button>
 
-      <div class="action-buttons">
-        <button type="button" onclick="undoLastEntry()">Undo Last Entry</button>
-        <button type="button" onclick="redoLastEntry()">Redo Last Entry</button>
-      </div>
-    </form>
+  <!-- <button type="button" onclick="exportData()">Export Backup (.json)</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
+  <button type="button" onclick="document.getElementById('import-file').click()">Import Backup (.json)</button>
+  <button id="reset-btn" type="button" onclick="resetAllData()">Reset All Data</button> -->
+
+  <div class="action-buttons">
+    <button type="button" onclick="undoLastEntry()">Undo Last Entry</button>
+    <button type="button" onclick="redoLastEntry()">Redo Last Entry</button>
+  </div>
+</form>
+
 
     <!-- 🔧 Manage Categories Section -->
     <hr class="section-divider" />
@@ -236,13 +239,16 @@
 </div>
 
 <!-- 📋 Category Expense Details Modal -->
-<div id="category-expense-modal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -20%); background:#fff; border:2px solid #ccc; padding:20px; border-radius:10px; z-index:2000; width:90%; max-width:500px;">
+<div id="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.5); z-index:1999;"></div>
+
+<div id="category-expense-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; border:2px solid #ccc; padding:20px; border-radius:10px; z-index:2000; width:90%; max-width:500px;">
   <h3 id="expense-modal-title">Category Expenses</h3>
   <div id="expense-list" style="max-height:300px; overflow-y:auto; margin-top:10px; border-top:1px solid #ddd; padding-top:10px;"></div>
   <div style="text-align:right; margin-top:10px;">
     <button onclick="closeCategoryExpenseModal()">❌ Close</button>
   </div>
 </div>
+
 
 
 </div>
@@ -257,7 +263,6 @@
 <!-- Material Scroll to Top Button -->
 <button id="scrollToTopBtn" aria-label="Scroll to Top">
   <span>&uarr; Top</span>
- 
 </button>
 
 <script>

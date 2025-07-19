@@ -117,17 +117,24 @@ function saveExpenses() {
 // ==== Form Submission ====
 document.getElementById("expense-form").addEventListener("submit", (e) => {
   e.preventDefault();
+
   const date = document.getElementById("date").value;
   const category = document.getElementById("category").value;
   const amount = parseFloat(document.getElementById("amount").value);
+  const details = document.getElementById("details").value.trim(); // ✅ New: capture details
+
   if (!date || !category || isNaN(amount)) return;
 
-  expenses.push({ date, category, amount });
+  expenses.push({ date, category, amount, details }); // ✅ Save details too
   saveExpenses();
+
   e.target.reset();
+  document.getElementById("details").value = ""; // ✅ Clear details explicitly (optional)
   setCurrentDateTime();
   document.activeElement.blur();
 });
+
+
 
 // 🔧 Updated: Show all dates in history selector (not filtered by month/year)
 function updateHistory() {
@@ -343,22 +350,41 @@ function viewCategoryExpenses(category) {
   if (filtered.length === 0) {
     list.innerHTML = `<p>No expenses found for this category this month.</p>`;
   } else {
-    list.innerHTML = filtered.map(e => `
-      <div style="padding:6px 0; border-bottom:1px solid #eee;">
-        📅 <b>${new Date(e.date).toLocaleDateString()}</b> – 💵 $${e.amount.toFixed(2)}
-      </div>
-    `).join("");
+    list.innerHTML = filtered.map(e => {
+      // 📝 Format date
+      const dateStr = new Date(e.date).toLocaleDateString();
+
+      // 📌 Add details if present
+      const detailsHTML = e.details && e.details.trim() !== ""
+        ? `<div style="font-size: 0.85em; color: #555; margin-left: 20px;">↳ ${e.details}</div>`
+        : "";
+
+      return `
+        <div style="padding:6px 0; border-bottom:1px solid #eee;">
+          📅 <b>${dateStr}</b> – 💵 $${e.amount.toFixed(2)}
+          ${detailsHTML}
+        </div>
+      `;
+    }).join("");
   }
 
-  // 📦 Show the modal
-  modal.style.display = "block";
+  // 📦 Show the modals
+  document.getElementById("modal-overlay").style.display = "block"; // Show overlay
+  document.getElementById("category-expense-modal").style.display = "block"; // Show modal
+  document.body.classList.add("no-scroll"); // Lock scroll
 }
+
 
 // ❌ Close the category expenses modal
 function closeCategoryExpenseModal() {
   const modal = document.getElementById("category-expense-modal");
-  if (modal) modal.style.display = "none";
+  const overlay = document.getElementById("modal-overlay");
+
+  if (modal) modal.style.display = "none";       // Hide popup
+  if (overlay) overlay.style.display = "none";   // Hide background dim
+  document.body.classList.remove("no-scroll");   // Unlock scroll
 }
+
 
 // ==== History View Grouped by Month and Date ====
 function showHistory(keepOpen = false) {
@@ -1171,6 +1197,10 @@ document.addEventListener("keydown", function (event) {
     applyCategoryEdit();
   }
 });
+
+// MODAL🖱️ Close the popup when user clicks on the background overlay
+document.getElementById("modal-overlay").addEventListener("click", closeCategoryExpenseModal);
+
 
 // 📊 Show Yearly, Half-Yearly, and Quarterly Averages for each category
 // 📊 Calculates and populates Yearly, Half-Yearly, and Quarterly Averages
