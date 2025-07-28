@@ -123,14 +123,18 @@ document.getElementById("expense-form").addEventListener("submit", (e) => {
   const amount = parseFloat(document.getElementById("amount").value);
   const details = document.getElementById("details").value.trim(); // ✅ New: capture details
 
-  if (!date || !category || isNaN(amount)) return;
+  // ❌ Prevent submission if date/category/amount missing or amount is 0 or negative
+  if (!date || !category || isNaN(amount) || amount <= 0) {
+    alert("Please enter a valid amount greater than 0.");
+    return;
+  }
 
   expenses.push({ date, category, amount, details }); // ✅ Save details too
   saveExpenses();
 
   e.target.reset();
   document.getElementById("details").value = ""; // ✅ Clear details explicitly (optional)
-  setCurrentDateTime();
+  setCurrentDateTime(); // ✅ Refill current time after reset
   document.activeElement.blur();
 });
 

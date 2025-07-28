@@ -44,30 +44,35 @@
     <h1>YEM</h1>
     <h2>(Your Expense Manager) </h2>
     
-   <form id="expense-form">
-  <input type="datetime-local" id="date" required />
-
+<form id="expense-form">
+  <!-- ⭐ Select Category -->
+  <label for="category">Select Category *</label>
   <select id="category" required>
     <option value="">--Select Category--</option>
   </select>
 
+  <!-- 💲 Amount -->
+  <label for="amount">Enter Amount *</label>
   <input type="number" id="amount" step="0.01" min="0" placeholder="Enter amount" required />
 
-  <!-- 🔥 New Details Field -->
+  <!-- 📝 Details -->
+  <label for="details">Enter Details or Sub-Type (optional)</label>
   <input type="text" id="details" placeholder="Enter details or sub-type (optional)" />
 
+  <!-- 🕒 Date & Time -->
+  <label for="date">Select Date & Time *</label>
+  <input type="datetime-local" id="date" required />
+
+  <!-- ➕ Submit Button -->
   <button type="submit">Add Expense</button>
 
-  <!-- <button type="button" onclick="exportData()">Export Backup (.json)</button>
-  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
-  <button type="button" onclick="document.getElementById('import-file').click()">Import Backup (.json)</button>
-  <button id="reset-btn" type="button" onclick="resetAllData()">Reset All Data</button> -->
-
+  <!-- 🔄 Undo/Redo Buttons -->
   <div class="action-buttons">
     <button type="button" onclick="undoLastEntry()">Undo Last Entry</button>
     <button type="button" onclick="redoLastEntry()">Redo Last Entry</button>
   </div>
 </form>
+
 
 
     <!-- 🔧 Manage Categories Section -->
