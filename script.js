@@ -350,19 +350,23 @@ function viewCategoryExpenses(category) {
   if (filtered.length === 0) {
     list.innerHTML = `<p>No expenses found for this category this month.</p>`;
   } else {
-    list.innerHTML = filtered.map(e => {
-      // 📝 Format date
+    list.innerHTML = filtered.map((e, index) => {
       const dateStr = new Date(e.date).toLocaleDateString();
-
-      // 📌 Add details if present
       const detailsHTML = e.details && e.details.trim() !== ""
-        ? `<div style="font-size: 0.85em; color: #555; margin-left: 20px;">↳ ${e.details}</div>`
+        ? `<div style="font-size: 0.85em; color: #555; margin-top: 4px;">↳ ${e.details}</div>`
         : "";
 
       return `
-        <div style="padding:6px 0; border-bottom:1px solid #eee;">
-          📅 <b>${dateStr}</b> – 💵 $${e.amount.toFixed(2)}
-          ${detailsHTML}
+        <div style="padding:10px; border-bottom:1px solid #eee;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>📅 <b>${dateStr}</b></span>
+            <button onclick="editExpense('${category}', '${e.date}', ${e.amount})"
+              style="background: none; border: none; color: #3F51B5; font-weight: 600; cursor: pointer; font-size: 0.9rem;">✏️ Edit</button>
+          </div>
+          <div style="margin-top: 6px;">
+            💵 $${e.amount.toFixed(2)}
+            ${detailsHTML}
+          </div>
         </div>
       `;
     }).join("");
@@ -372,6 +376,39 @@ function viewCategoryExpenses(category) {
   document.getElementById("modal-overlay").style.display = "block"; // Show overlay
   document.getElementById("category-expense-modal").style.display = "block"; // Show modal
   document.body.classList.add("no-scroll"); // Lock scroll
+}
+
+function editExpense(category, dateStr, oldAmount) {
+  // 🧠 Convert date string back to Date object for accurate matching
+  const targetDate = new Date(dateStr);
+  const formattedTargetDate = targetDate.toLocaleDateString();
+
+  // 🔍 Find the matching expense entry
+  const expToEdit = expenses.find(e =>
+    e.category === category &&
+    new Date(e.date).toLocaleDateString() === formattedTargetDate &&
+    e.amount === oldAmount
+  );
+
+  // ❌ If not found, exit
+  if (!expToEdit) {
+    alert("Expense not found.");
+    return;
+  }
+
+  // 📝 Ask user for updated amount and optional new details
+  const newAmount = prompt("Edit amount:", expToEdit.amount);
+  if (newAmount === null || isNaN(newAmount)) return;
+
+  const newDetails = prompt("Edit details (optional):", expToEdit.details || "");
+
+  // ✅ Update values
+  expToEdit.amount = parseFloat(newAmount);
+  expToEdit.details = newDetails;
+
+  // 💾 Save and refresh
+  saveExpenses(); // Should already exist in your code
+  viewCategoryExpenses(category); // Refresh modal with updated data
 }
 
 
