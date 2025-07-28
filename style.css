@@ -869,50 +869,47 @@ label + .date-sort-dropdown {
   }
 }
 
+/* 🌟 Scroll to Top Button Styling */
 #scrollToTopBtn {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  z-index: 1000;
-  width: 56px;
-  height: 56px;
-  border: none;
-  background-color: #0077cc; /* Material Purple */
+  z-index: 999;
+  background-color: #0056b3;
   color: white;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3); /* Material shadow */
+  border: none;
+  padding: 12px 16px;
+  border-radius: 50%;
+  font-size: 20px;
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
-#scrollToTopBtn:hover {
-  background-color: #1756a1; /* Darker shade on hover */
-  transform: scale(1.1); /* Slight zoom on hover */
+/* 🔍 Show the button on scroll */
+#scrollToTopBtn.show {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
 }
 
-/* 🪄 Responsive adjustments */
-@media (max-width: 768px) {
+/* ✨ Hide with scale for effect */
+#scrollToTopBtn.hide {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0);
+}
+
+/* 📱 Responsive: Smaller padding and font on small devices */
+@media (max-width: 600px) {
   #scrollToTopBtn {
-    width: 48px; /* Slightly smaller on tablets */
-    height: 48px;
-    font-size: 20px;
+    padding: 8px 12px;
+    font-size: 16px;
   }
 }
 
-@media (max-width: 480px) {
-  #scrollToTopBtn {
-    width: 40px; /* Even smaller on mobile */
-    height: 40px;
-    font-size: 18px;
-    bottom: 15px; /* Adjust position for smaller screens */
-    left: 15px;
-  }
-}
 
 
 .no-scroll {
