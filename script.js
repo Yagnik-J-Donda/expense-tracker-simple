@@ -4,6 +4,8 @@ let categoryLimits = JSON.parse(localStorage.getItem("categoryLimits") || "{}");
 let categoryKinds = JSON.parse(localStorage.getItem("categoryKinds") || "{}");
 
 let deletedCategories = JSON.parse(localStorage.getItem("deletedCategories") || "[]");
+let currentCategory = null;
+
 
 
 document.getElementById("month-select").addEventListener("change", updateRemainingBudget);
@@ -354,26 +356,31 @@ function viewCategoryExpenses(category) {
   if (filtered.length === 0) {
     list.innerHTML = `<p>No expenses found for this category this month.</p>`;
   } else {
-    list.innerHTML = filtered.map((e, index) => {
-      const dateStr = new Date(e.date).toLocaleDateString();
-      const detailsHTML = e.details && e.details.trim() !== ""
-        ? `<div style="font-size: 0.85em; color: #555; margin-top: 4px;">↳ ${e.details}</div>`
-        : "";
+      list.innerHTML = filtered.map((e, index) => {
+  const dateStr = new Date(e.date).toLocaleDateString();
+  const detailsHTML = e.details && e.details.trim() !== ""
+    ? `<div style="font-size: 0.85em; color: #666; margin-top: 4px;">↳ ${e.details}</div>`
+    : "";
 
-      return `
-        <div style="padding:10px; border-bottom:1px solid #eee;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>📅 <b>${dateStr}</b></span>
-            <button onclick="editExpense('${category}', '${e.date}', ${e.amount})"
-              style="background: none; border: none; color: #3F51B5; font-weight: 600; cursor: pointer; font-size: 0.9rem;">✏️ Edit</button>
-          </div>
-          <div style="margin-top: 6px;">
-            💵 $${e.amount.toFixed(2)}
-            ${detailsHTML}
-          </div>
-        </div>
-      `;
-    }).join("");
+  return `
+    <div style="padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-weight: 600; color: #333;">📅 ${dateStr}</div>
+        <button 
+          onclick="openEditExpenseModal('${category}', '${e.date}', ${e.amount})"
+          style="background-color: transparent; border: none; color: #3F51B5; font-weight: 500; cursor: pointer; font-size: 0.85rem;">
+          ✏️ Edit
+        </button>
+      </div>
+      <div style="margin-top: 6px; font-size: 0.95rem; color: #444;">
+        💵 $${e.amount.toFixed(2)}
+        ${detailsHTML}
+      </div>
+    </div>
+  `;
+}).join("");
+
+
   }
 
   // 📦 Show the modals
@@ -383,37 +390,115 @@ function viewCategoryExpenses(category) {
 }
 
 function editExpense(category, dateStr, oldAmount) {
-  // 🧠 Convert date string back to Date object for accurate matching
   const targetDate = new Date(dateStr);
   const formattedTargetDate = targetDate.toLocaleDateString();
 
-  // 🔍 Find the matching expense entry
+  // 🔍 Find the matching expense
   const expToEdit = expenses.find(e =>
     e.category === category &&
     new Date(e.date).toLocaleDateString() === formattedTargetDate &&
     e.amount === oldAmount
   );
 
-  // ❌ If not found, exit
   if (!expToEdit) {
     alert("Expense not found.");
     return;
   }
 
-  // 📝 Ask user for updated amount and optional new details
+  // Prompt for new values
   const newAmount = prompt("Edit amount:", expToEdit.amount);
   if (newAmount === null || isNaN(newAmount)) return;
 
   const newDetails = prompt("Edit details (optional):", expToEdit.details || "");
 
-  // ✅ Update values
+  // Format current date and time in ISO format for editing
+  const currentDateTime = new Date(expToEdit.date).toISOString().slice(0, 16);
+  const newDateTime = prompt("Edit date and time (YYYY-MM-DDTHH:MM):", currentDateTime);
+
+  // Validate date format
+  const newDate = newDateTime ? new Date(newDateTime) : null;
+  if (!newDate || isNaN(newDate.getTime())) {
+    alert("Invalid date/time format.");
+    return;
+  }
+
+  // Update expense
   expToEdit.amount = parseFloat(newAmount);
   expToEdit.details = newDetails;
+  expToEdit.date = newDate.toISOString(); // Save in ISO format
 
-  // 💾 Save and refresh
-  saveExpenses(); // Should already exist in your code
-  viewCategoryExpenses(category); // Refresh modal with updated data
+  // Save and refresh
+  saveExpenses();
+  viewCategoryExpenses(category);
 }
+// Open and populate the edit modal
+function openEditExpenseModal(category, dateStr, amount) {
+  currentCategory = category;
+
+  const targetDate = new Date(dateStr).toLocaleDateString();
+  const index = expenses.findIndex(e =>
+    e.category === category &&
+    new Date(e.date).toLocaleDateString() === targetDate &&
+    e.amount === amount
+  );
+
+  if (index === -1) {
+    alert("Expense not found.");
+    return;
+  }
+
+  const exp = expenses[index];
+  document.getElementById("edit-date").value = new Date(exp.date).toISOString().slice(0, 16);
+  document.getElementById("edit-amount").value = exp.amount;
+  document.getElementById("edit-details").value = exp.details || "";
+  document.getElementById("edit-index").value = index;
+
+  document.getElementById("edit-expense-modal").style.display = "block";
+  document.getElementById("edit-overlay").style.display = "block";
+  document.body.classList.add("no-scroll");
+}
+
+
+// Close modal
+function closeEditModal() {
+  document.getElementById("edit-expense-modal").style.display = "none";
+  document.getElementById("edit-overlay").style.display = "none";
+  document.body.classList.remove("no-scroll");
+}
+
+
+document.getElementById("edit-expense-form").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  if (!confirm("Are you sure you want to save these changes?")) return;
+
+  const index = parseInt(document.getElementById("edit-index").value);
+  const newDate = new Date(document.getElementById("edit-date").value);
+  const newAmount = parseFloat(document.getElementById("edit-amount").value);
+  const newDetails = document.getElementById("edit-details").value.trim();
+
+  if (isNaN(newAmount) || isNaN(newDate.getTime())) {
+    alert("Invalid input.");
+    return;
+  }
+
+  expenses[index].date = newDate.toISOString();
+  expenses[index].amount = newAmount;
+  expenses[index].details = newDetails;
+
+  saveExpenses();
+
+  // ✅ FIRST close the edit modal
+  closeEditModal();
+
+  // ✅ THEN refresh the category box after a minimal delay
+  setTimeout(() => {
+    viewCategoryExpenses(currentCategory);
+  }, 50);
+});
+
+
+
 
 
 // ❌ Close the category expenses modal

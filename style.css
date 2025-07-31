@@ -869,15 +869,14 @@ label + .date-sort-dropdown {
   }
 }
 
-/* 🌟 Scroll to Top Button Styling */
 #scrollToTopBtn {
+  all: unset; /* 🚨 Reset all default styles */
   position: fixed;
   bottom: 20px;
   left: 20px;
   z-index: 999;
-  background-color: #0056b3;
+  background-color: #3F51B5;
   color: white;
-  border: none;
   padding: 12px 16px;
   border-radius: 50%;
   font-size: 20px;
@@ -886,23 +885,29 @@ label + .date-sort-dropdown {
   visibility: hidden;
   transition: opacity 0.3s ease, transform 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  border: none; /* 🧼 Explicitly remove borders */
 }
 
-/* 🔍 Show the button on scroll */
+/* Show */
 #scrollToTopBtn.show {
   opacity: 1;
   visibility: visible;
   transform: scale(1);
 }
 
-/* ✨ Hide with scale for effect */
+/* Hide */
 #scrollToTopBtn.hide {
   opacity: 0;
   visibility: hidden;
   transform: scale(0);
 }
 
-/* 📱 Responsive: Smaller padding and font on small devices */
+/* Responsive */
 @media (max-width: 600px) {
   #scrollToTopBtn {
     padding: 8px 12px;
