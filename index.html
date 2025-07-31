@@ -147,7 +147,24 @@
       <label for="history-date-select" style="font-weight: bold;">Select Date:</label>
       <select id="history-date-select"></select>
     </div>
-    <div id="history-view" class="history-container"></div>
+    <div id="history-view" class="history-container">
+  <div class="table-wrapper">
+    <table id="history-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Category</th>
+          <th>Amount ($)</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody id="history-tbody">
+        <!-- JS will populate rows -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
   </div>
 
 <!-- 📊 Toggle Button for Full View Averages -->
@@ -282,29 +299,41 @@
   max-width: 500px;
   box-sizing: border-box;
   font-family: 'Segoe UI', sans-serif;
+  overflow-y: auto;
+  max-height: 90vh;
 ">
   <h3 style="margin-top: 0; color: #3F51B5;">✏️ Edit Expense</h3>
   <form id="edit-expense-form">
-    <label style="display: block; margin-bottom: 12px;">
-      Date and Time (required):<br>
-      <input type="datetime-local" id="edit-date" required style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px;">
-    </label>
 
+    <!-- ✅ Amount First -->
     <label style="display: block; margin-bottom: 12px;">
       Amount (required):<br>
-      <input type="number" id="edit-amount" step="0.01" required style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px;">
+      <input type="number" id="edit-amount" step="0.01" required
+        style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px; box-sizing: border-box;">
     </label>
 
-    <label style="display: block; margin-bottom: 16px;">
+    <!-- ✅ Details Second -->
+    <label style="display: block; margin-bottom: 12px;">
       Details (optional):<br>
-      <textarea id="edit-details" rows="4" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; resize: vertical; margin-top: 5px;"></textarea>
+      <textarea id="edit-details" rows="4" placeholder="e.g. groceries or electricity"
+        style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; resize: vertical; margin-top: 5px; box-sizing: border-box;"></textarea>
+    </label>
+
+    <!-- ✅ Date and Time Last -->
+    <label style="display: block; margin-bottom: 16px;">
+      Date and Time (required):<br>
+      <input type="datetime-local" id="edit-date" required
+        style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px; box-sizing: border-box;">
     </label>
 
     <input type="hidden" id="edit-index">
 
+    <!-- ✅ Buttons -->
     <div style="display: flex; justify-content: flex-end; gap: 12px;">
-      <button type="button" onclick="closeEditModal()" style="background-color: #ccc; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer;">Cancel</button>
-      <button type="submit" style="background-color: #3F51B5; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Save</button>
+      <button type="button" onclick="closeEditModal()"
+        style="background-color: #ccc; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer;">Cancel</button>
+      <button type="submit"
+        style="background-color: #3F51B5; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Save</button>
     </div>
   </form>
 </div>

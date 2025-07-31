@@ -185,6 +185,9 @@ function renderDateHistory(dateStr) {
   title.textContent = `Entries for ${dateStr}`;
   historyView.appendChild(title);
 
+  const tableWrapper = document.createElement("div");
+  tableWrapper.className = "table-wrapper no-horizontal-scroll";
+
   const table = document.createElement("table");
   table.innerHTML = `
     <thead>
@@ -192,6 +195,7 @@ function renderDateHistory(dateStr) {
         <th>Time</th>
         <th>Category</th>
         <th>Amount ($)</th>
+        <th>Details</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -202,16 +206,40 @@ function renderDateHistory(dateStr) {
   const sorted = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
   sorted.forEach(entry => {
     const row = document.createElement("tr");
+    row.classList.add("expandable-row");
+
+    const time = new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const detailsText = entry.details?.trim() || "-";
+    const isLong = detailsText.length > 30;
+    const preview = isLong ? detailsText.slice(0, 30) + "..." : detailsText;
+
+    let expanded = false;
+
     row.innerHTML = `
-      <td>${new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+      <td>${time}</td>
       <td>${entry.category}</td>
       <td>$${entry.amount.toFixed(2)}</td>
+      <td><span class="details-text">${preview}</span></td>
     `;
+
+    row.addEventListener("click", () => {
+      const span = row.querySelector(".details-text");
+
+      if (!isLong) return;
+
+      expanded = !expanded;
+      span.textContent = expanded ? detailsText : preview;
+      row.classList.toggle("expanded-row", expanded);
+    });
+
     tbody.appendChild(row);
   });
 
-  historyView.appendChild(table);
+  tableWrapper.appendChild(table);
+  historyView.appendChild(tableWrapper);
 }
+
+
 
 function renderRecycleBin() {
   const binList = document.getElementById("recycle-bin-list");
@@ -781,6 +809,7 @@ function renderDateEntries(entries, sortType, container) {
         <th>Time</th>
         <th>Category</th>
         <th>Amount ($)</th>
+        <th>Details</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -790,6 +819,7 @@ function renderDateEntries(entries, sortType, container) {
 
   sorted.forEach(entry => {
     const row = document.createElement("tr");
+
     const timeCell = document.createElement("td");
     timeCell.textContent = new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -799,14 +829,20 @@ function renderDateEntries(entries, sortType, container) {
     const amountCell = document.createElement("td");
     amountCell.textContent = `$${entry.amount.toFixed(2)}`;
 
+    const detailsCell = document.createElement("td");
+    detailsCell.textContent = entry.details || '-';
+
     row.appendChild(timeCell);
     row.appendChild(catCell);
     row.appendChild(amountCell);
+    row.appendChild(detailsCell);
+
     tbody.appendChild(row);
   });
 
   container.appendChild(table);
 }
+
 
 // ==== Export Function ====
 function exportData() {

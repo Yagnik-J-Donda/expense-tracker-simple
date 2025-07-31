@@ -1034,3 +1034,9 @@ label + .date-sort-dropdown {
 #auth-modal .action-buttons button.cancel:hover {
   background-color: #b3b3b3;
 }
+td:nth-child(4),
+th:nth-child(4) {
+  max-width: 250px;
+  word-wrap: break-word;
+  font-style: normal;
+}
