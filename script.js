@@ -5,6 +5,8 @@ let categoryKinds = JSON.parse(localStorage.getItem("categoryKinds") || "{}");
 
 let deletedCategories = JSON.parse(localStorage.getItem("deletedCategories") || "[]");
 let currentCategory = null;
+let deletedEntries = JSON.parse(localStorage.getItem("deletedEntries")) || [];
+
 
 
 
@@ -20,9 +22,11 @@ function getMonthKeyFromDate(dateStr) {
 
 function saveExpenses() {
   localStorage.setItem("expenses", JSON.stringify(expenses));
-  localStorage.setItem("categoryLimits", JSON.stringify(categoryLimits));
-  localStorage.setItem("categoryKinds", JSON.stringify(categoryKinds));
+  localStorage.setItem("recycleBin", JSON.stringify(recycleBin));
+  localStorage.setItem("deletedCategories", JSON.stringify(deletedCategories));
+  localStorage.setItem("deletedEntries", JSON.stringify(deletedEntries));
 }
+
 
 function renderCategoryDropdown() {
   const select = document.getElementById("category");
@@ -241,24 +245,7 @@ function renderDateHistory(dateStr) {
 
 
 
-function renderRecycleBin() {
-  const binList = document.getElementById("recycle-bin-list");
-  binList.innerHTML = "";
 
-  if (deletedCategories.length === 0) {
-    binList.innerHTML = "<li><em>No deleted categories</em></li>";
-    return;
-  }
-
-  deletedCategories.forEach((entry, index) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <span>🗂️ ${entry.category} (${entry.monthKey})</span>
-      <button onclick="restoreCategory(${index})">♻️ Restore</button>
-    `;
-    binList.appendChild(li);
-  });
-}
 
 function restoreCategory(index) {
   const entry = deletedCategories[index];
@@ -266,7 +253,7 @@ function restoreCategory(index) {
 
   const { category, monthKey } = entry;
 
-  // 🟢 Restore with default values (or prompt if needed)
+  // 🟢 Restore with default values
   categoryLimits[category] = 0;
   categoryKinds[category] = "Flexible";
 
@@ -278,8 +265,25 @@ function restoreCategory(index) {
 
   renderRecycleBin();
   updateRemainingBudget();
+
+  closeDeletedCategoriesView();
+
+  // ✅ Set dropdowns and then refresh
+  setTimeout(() => {
+    const [yearStr, monthStr] = monthKey.split("-");
+    document.getElementById("year-select").value = parseInt(yearStr);
+    document.getElementById("month-select").value = parseInt(monthStr) - 1;
+
+    // ✅ Reload the page to re-render correct data
+    location.reload();
+  }, 50);
+
+  // Optional confirmation message
   alert(`Category "${category}" restored for ${monthKey}`);
 }
+
+
+
 
 
 // ==== Budget Display ====
@@ -417,11 +421,11 @@ function viewCategoryExpenses(category) {
   document.body.classList.add("no-scroll"); // Lock scroll
 }
 
+// ✅ Edit Expense - Legacy prompt version
 function editExpense(category, dateStr, oldAmount) {
   const targetDate = new Date(dateStr);
   const formattedTargetDate = targetDate.toLocaleDateString();
 
-  // 🔍 Find the matching expense
   const expToEdit = expenses.find(e =>
     e.category === category &&
     new Date(e.date).toLocaleDateString() === formattedTargetDate &&
@@ -433,33 +437,29 @@ function editExpense(category, dateStr, oldAmount) {
     return;
   }
 
-  // Prompt for new values
   const newAmount = prompt("Edit amount:", expToEdit.amount);
   if (newAmount === null || isNaN(newAmount)) return;
 
   const newDetails = prompt("Edit details (optional):", expToEdit.details || "");
 
-  // Format current date and time in ISO format for editing
   const currentDateTime = new Date(expToEdit.date).toISOString().slice(0, 16);
   const newDateTime = prompt("Edit date and time (YYYY-MM-DDTHH:MM):", currentDateTime);
 
-  // Validate date format
   const newDate = newDateTime ? new Date(newDateTime) : null;
   if (!newDate || isNaN(newDate.getTime())) {
     alert("Invalid date/time format.");
     return;
   }
 
-  // Update expense
   expToEdit.amount = parseFloat(newAmount);
   expToEdit.details = newDetails;
-  expToEdit.date = newDate.toISOString(); // Save in ISO format
+  expToEdit.date = newDate.toISOString();
 
-  // Save and refresh
   saveExpenses();
   viewCategoryExpenses(category);
 }
-// Open and populate the edit modal
+
+// ✅ Open Edit Modal
 function openEditExpenseModal(category, dateStr, amount) {
   currentCategory = category;
 
@@ -484,6 +484,166 @@ function openEditExpenseModal(category, dateStr, amount) {
   document.getElementById("edit-expense-modal").style.display = "block";
   document.getElementById("edit-overlay").style.display = "block";
   document.body.classList.add("no-scroll");
+}
+
+// ✅ Delete (Soft Delete) to deletedEntries[]
+function deleteCurrentExpense() {
+  if (!confirm("Are you sure you want to delete this entry? It will be moved to the Recycle Bin.")) return;
+
+  const index = parseInt(document.getElementById("edit-index").value);
+
+  if (index >= 0 && index < expenses.length) {
+    const deletedEntry = expenses.splice(index, 1)[0];
+    deletedEntries.push({ ...deletedEntry, deletedAt: new Date().toISOString() });
+    saveExpenses();
+    closeEditModal();
+    viewCategoryExpenses(currentCategory);
+  } else {
+    alert("Invalid expense entry.");
+  }
+}
+
+// ✅ Show Deleted Entries Modal
+function showDeletedEntries() {
+  if (deletedEntries.length === 0) {
+    alert("No deleted entries found.");
+    return;
+  }
+
+  let html = `<h2>💵 Deleted Entries</h2><ul style="list-style:none; padding-left:0;">`;
+
+  deletedEntries.forEach((entry, index) => {
+    html += `
+      <li style="margin-bottom: 12px; border-bottom: 1px solid #ccc; padding-bottom: 8px;">
+        <strong>${entry.category}</strong><br>
+        $${entry.amount} — ${new Date(entry.date).toLocaleString()}<br>
+        ${entry.details ? `📝 ${entry.details}` : ""}
+        <br><button onclick="restoreDeletedEntry(${index})" style="margin-top: 6px;">♻️ Restore</button>
+      </li>
+    `;
+  });
+
+  html += `</ul><button onclick="closeDeletedEntriesView()">❌ Close</button>`;
+
+  const modal = document.createElement("div");
+  modal.id = "deleted-entries-modal";
+  modal.style = `
+    position:fixed;
+    top:10%;
+    left:50%;
+    transform:translateX(-50%);
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    z-index:4000;
+    width:90%;
+    max-width:600px;
+    max-height:80vh;
+    overflow-y:auto;
+  `;
+  modal.innerHTML = html;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("no-scroll");
+}
+
+// ✅ Restore a Deleted Entry
+function restoreDeletedEntry(index) {
+  const restored = deletedEntries.splice(index, 1)[0];
+  expenses.push(restored);
+  saveExpenses();
+  closeDeletedEntriesView();
+  viewCategoryExpenses(restored.category);
+}
+
+// ✅ Show Deleted Category Modal
+function showDeletedCategories() {
+  if (deletedCategories.length === 0) {
+    alert("No deleted categories found.");
+    return;
+  }
+
+  let html = `<h2>🗂️ Deleted Categories</h2><ul style="list-style:none; padding-left:0;">`;
+
+  deletedCategories.forEach((entry, index) => {
+    html += `
+      <li style="margin-bottom: 12px; border-bottom: 1px solid #ccc; padding-bottom: 8px;">
+        <strong>📁 ${entry.category}</strong><br>
+        Month: ${entry.monthKey}<br>
+        ${entry.entries && entry.entries.length > 0 ? `🧾 ${entry.entries.length} entries` : ""}
+        <br><button onclick="restoreCategory(${index})" style="margin-top: 6px;">♻️ Restore</button>
+      </li>
+    `;
+  });
+
+  html += `</ul><button onclick="closeDeletedCategoriesView()">❌ Close</button>`;
+
+  const modal = document.createElement("div");
+  modal.id = "deleted-categories-modal";
+  modal.style = `
+    position:fixed;
+    top:10%;
+    left:50%;
+    transform:translateX(-50%);
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    z-index:4000;
+    width:90%;
+    max-width:600px;
+    max-height:80vh;
+    overflow-y:auto;
+  `;
+  modal.innerHTML = html;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("no-scroll");
+}
+
+// ✅ Restore a Deleted 
+function closeDeletedCategoriesView() {
+  const modal = document.getElementById("deleted-categories-modal");
+  if (modal) modal.remove();
+  document.body.classList.remove("no-scroll");
+}
+
+// ✅ Close Deleted Entries View
+function closeDeletedEntriesView() {
+  const modal = document.getElementById("deleted-entries-modal");
+  if (modal) modal.remove();
+  document.body.classList.remove("no-scroll");
+}
+
+// ✅ Close Sidebar
+function closeSidebar() {
+  document.getElementById("sidebar").style.left = "-300px";
+  document.getElementById("nav-overlay").style.display = "none";
+  document.body.classList.remove("no-scroll");
+}
+
+// ✅ Handle Show Deleted Switch
+function handleShowDeleted(type) {
+  closeSidebar(); // Ensures sidebar is closed
+  setTimeout(() => {
+    if (type === "category") {
+      showDeletedCategories();
+    } else {
+      showDeletedEntries();
+    }
+  }, 300); // Delay to avoid z-index overlay conflict
+}
+
+// ✅ Render Recycle Bin Sidebar Buttons
+function renderRecycleBin() {
+  const binList = document.getElementById("recycle-bin-list");
+  binList.innerHTML = `
+    <li><button onclick="handleShowDeleted('category')">🗂️ View Deleted Categories</button></li>
+    <li><button onclick="handleShowDeleted('entry')">💵 View Deleted Entries</button></li>
+  `;
+
+  if (deletedCategories.length === 0 && deletedEntries.length === 0) {
+    binList.innerHTML += `<li style="margin-top: 10px;"><em>Recycle Bin is empty.</em></li>`;
+  }
 }
 
 
