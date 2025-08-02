@@ -70,22 +70,6 @@ body {
   transform: translateY(-2px); /* Lift up slightly */
 }
 
-
-/* #sidebar {
-  position: fixed;
-  top: 0;
-  left: -250px;
-  height: 100%;
-  width: 250px;
-  background-color: #fff;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-  transition: left 0.3s ease;
-  z-index: 1000;
-  padding: 20px;
-  overflow-y: auto;
-  pointer-events: none; /* Disable interaction when hidden */
-/* } */ */
-
 #sidebar {
   position: fixed;
   top: 0;

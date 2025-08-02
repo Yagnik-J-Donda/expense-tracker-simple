@@ -1402,6 +1402,7 @@ document.addEventListener("DOMContentLoaded", function () {
     okBtn.addEventListener("click", () => {
       localStorage.setItem("onboardingShown", "true");
       closeOnboardingModal();
+      this.location.reload(); // Reload to apply changes
     });
   }
 
@@ -1429,6 +1430,7 @@ function closeOnboardingModal() {
 window.showOnboardingModalAgain = function () {
   localStorage.setItem("onboardingShown", "false");
   showOnboardingModal();
+
 };
 
 
