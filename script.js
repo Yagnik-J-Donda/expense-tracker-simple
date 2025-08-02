@@ -142,6 +142,9 @@ document.getElementById("expense-form").addEventListener("submit", (e) => {
   document.getElementById("details").value = ""; // ✅ Clear details explicitly (optional)
   setCurrentDateTime(); // ✅ Refill current time after reset
   document.activeElement.blur();
+  
+  // ✅ Refresh the page
+  location.reload();
 });
 
 
